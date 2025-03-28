@@ -6,6 +6,20 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		653020462D956DB100EF33A3 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 653020452D956DB100EF33A3 /* SwiftUI.framework */; };
+		653020482D956DBD00EF33A3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 653020472D956DBD00EF33A3 /* Foundation.framework */; };
+		6530204C2D95818D00EF33A3 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6530204B2D95818D00EF33A3 /* CoreMedia.framework */; };
+		6530204E2D95819500EF33A3 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6530204D2D95819500EF33A3 /* CoreVideo.framework */; };
+		653020502D95819E00EF33A3 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6530204F2D95819E00EF33A3 /* ImageIO.framework */; };
+		653020522D9581A200EF33A3 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 653020512D9581A200EF33A3 /* CoreImage.framework */; };
+		653020542D95835300EF33A3 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 653020532D95835300EF33A3 /* AudioToolbox.framework */; };
+		6530205C2D9583DC00EF33A3 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6530205B2D9583DC00EF33A3 /* CoreAudio.framework */; };
+		653021202D96402E00EF33A3 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6530211F2D96402E00EF33A3 /* CoreGraphics.framework */; };
+		653021222D96418A00EF33A3 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 653021212D96418A00EF33A3 /* MarkdownUI */; };
+		653021242D96418A00EF33A3 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 653021232D96418A00EF33A3 /* Alamofire */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		65A0C65E2D9542A500138DAF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -23,15 +37,51 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		653021282D96418A00EF33A3 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		653020452D956DB100EF33A3 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		653020472D956DBD00EF33A3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		653020492D9580A000EF33A3 /* CoreAudioTypes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioTypes.framework; path = System/Library/Frameworks/CoreAudioTypes.framework; sourceTree = SDKROOT; };
+		6530204B2D95818D00EF33A3 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		6530204D2D95819500EF33A3 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
+		6530204F2D95819E00EF33A3 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
+		653020512D9581A200EF33A3 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
+		653020532D95835300EF33A3 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		6530205B2D9583DC00EF33A3 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		6530211F2D96402E00EF33A3 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		65A0C64C2D9542A300138DAF /* ScreenReader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreenReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		65A0C65D2D9542A500138DAF /* ScreenReaderTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenReaderTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		65A0C6672D9542A500138DAF /* ScreenReaderUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenReaderUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		6530212E2D96628D00EF33A3 /* Exceptions for "ScreenReader" folder in "ScreenReader" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 65A0C64B2D9542A300138DAF /* ScreenReader */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		65A0C64E2D9542A300138DAF /* ScreenReader */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				6530212E2D96628D00EF33A3 /* Exceptions for "ScreenReader" folder in "ScreenReader" target */,
+			);
 			path = ScreenReader;
 			sourceTree = "<group>";
 		};
@@ -52,6 +102,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6530204C2D95818D00EF33A3 /* CoreMedia.framework in Frameworks */,
+				653020462D956DB100EF33A3 /* SwiftUI.framework in Frameworks */,
+				6530205C2D9583DC00EF33A3 /* CoreAudio.framework in Frameworks */,
+				653021202D96402E00EF33A3 /* CoreGraphics.framework in Frameworks */,
+				653020522D9581A200EF33A3 /* CoreImage.framework in Frameworks */,
+				653021242D96418A00EF33A3 /* Alamofire in Frameworks */,
+				653020502D95819E00EF33A3 /* ImageIO.framework in Frameworks */,
+				653020542D95835300EF33A3 /* AudioToolbox.framework in Frameworks */,
+				653020482D956DBD00EF33A3 /* Foundation.framework in Frameworks */,
+				6530204E2D95819500EF33A3 /* CoreVideo.framework in Frameworks */,
+				653021222D96418A00EF33A3 /* MarkdownUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,12 +133,30 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6530202D2D95503B00EF33A3 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				6530211F2D96402E00EF33A3 /* CoreGraphics.framework */,
+				6530205B2D9583DC00EF33A3 /* CoreAudio.framework */,
+				653020532D95835300EF33A3 /* AudioToolbox.framework */,
+				653020512D9581A200EF33A3 /* CoreImage.framework */,
+				6530204F2D95819E00EF33A3 /* ImageIO.framework */,
+				6530204D2D95819500EF33A3 /* CoreVideo.framework */,
+				6530204B2D95818D00EF33A3 /* CoreMedia.framework */,
+				653020492D9580A000EF33A3 /* CoreAudioTypes.framework */,
+				653020472D956DBD00EF33A3 /* Foundation.framework */,
+				653020452D956DB100EF33A3 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		65A0C6432D9542A300138DAF = {
 			isa = PBXGroup;
 			children = (
 				65A0C64E2D9542A300138DAF /* ScreenReader */,
 				65A0C6602D9542A500138DAF /* ScreenReaderTests */,
 				65A0C66A2D9542A500138DAF /* ScreenReaderUITests */,
+				6530202D2D95503B00EF33A3 /* Frameworks */,
 				65A0C64D2D9542A300138DAF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -102,6 +181,7 @@
 				65A0C6482D9542A300138DAF /* Sources */,
 				65A0C6492D9542A300138DAF /* Frameworks */,
 				65A0C64A2D9542A300138DAF /* Resources */,
+				653021282D96418A00EF33A3 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -112,6 +192,8 @@
 			);
 			name = ScreenReader;
 			packageProductDependencies = (
+				653021212D96418A00EF33A3 /* MarkdownUI */,
+				653021232D96418A00EF33A3 /* Alamofire */,
 			);
 			productName = ScreenReader;
 			productReference = 65A0C64C2D9542A300138DAF /* ScreenReader.app */;
@@ -195,6 +277,10 @@
 			);
 			mainGroup = 65A0C6432D9542A300138DAF;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				653020DF2D963E8500EF33A3 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+				653020E02D963E9900EF33A3 /* XCRemoteSwiftPackageReference "Alamofire" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 65A0C64D2D9542A300138DAF /* Products */;
 			projectDirPath = "";
@@ -401,6 +487,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ScreenReader/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -428,6 +515,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ScreenReader/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -549,6 +637,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		653020DF2D963E8500EF33A3 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.1;
+			};
+		};
+		653020E02D963E9900EF33A3 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.10.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		653021212D96418A00EF33A3 /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 653020DF2D963E8500EF33A3 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			productName = MarkdownUI;
+		};
+		653021232D96418A00EF33A3 /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 653020E02D963E9900EF33A3 /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 65A0C6442D9542A300138DAF /* Project object */;
 }
