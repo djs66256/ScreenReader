@@ -1,0 +1,64 @@
+# Xcode
+.DS_Store
+*/xcuserdata
+*.xcuserstate
+*.xcworkspace
+*.xcodeproj
+xcshareddata
+*.xccheckout
+*.xcscmblueprint
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+*.xcsettings
+
+# Swift Package Manager
+.build/
+Packages/
+*.swiftpm
+.swiftpm/
+.build/
+
+# CocoaPods
+Pods/
+*.xcworkspace
+
+# Carthage
+Carthage/
+Checkouts/
+Build/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# AppCode
+.idea/
+
+# OS X
+.DS_Store
+
+# Swift
+*.swp
+*.swo
+*.swiftdeps
+*.swiftmodule
+*.swiftdoc
+
+# Build generated
+build/
+*.o
+*.d
+*.a
+
+# Local development files
+.env
+.env.local
+.env.*.local
+
+# Debug
+*.dSYM

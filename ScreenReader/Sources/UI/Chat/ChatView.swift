@@ -96,9 +96,11 @@ struct ChatView: View {
                     
                     // 输入区域
                     HStack(alignment: .bottom, spacing: 8) {
-                        TextField("输入消息...", text: $textInput, axis: .vertical)
-                            .textFieldStyle(.plain)
-                            .padding(10)
+                        // 替换TextField为TextEditor
+                        TextEditor(text: $textInput)
+                            .frame(minHeight: 40, maxHeight: 120)
+                            .padding(8)
+                            .font(.system(size: 16)) // 设置字号为16
                             .background(
                                 RoundedRectangle(cornerRadius: 8)
                                     .fill(Color(.controlBackgroundColor))
@@ -109,31 +111,23 @@ struct ChatView: View {
                                     .stroke(Color(.separatorColor).opacity(0.5), lineWidth: 1)
                             )
                             .focused($isInputFocused)
-                            .contentShape(Rectangle())
-                        
-                        Button {
-                            guard !textInput.isEmpty || !displayedImages.isEmpty else { return }
-                            Task { @MainActor in
-                                do {
-                                    if displayedImages.isEmpty {
-                                        try await viewModel.sendText(textInput, using: llmProvider)
-                                    } else {
-                                        try await viewModel.sendMessage(text: textInput, 
-                                                                       images: displayedImages,
-                                                                       using: llmProvider)
-                                    }
-                                    textInput = ""
-                                    isInputFocused = true
-                                } catch {
-                                    // 使用Toast显示错误
-                                    let toastMessage = "发送失败: \(error.localizedDescription)"
-                                    #if os(iOS)
-                                    Toast.show(message: toastMessage)
-                                    #else
-                                    NSAlert.showToast(message: toastMessage)
-                                    #endif
+                            .scrollContentBackground(.hidden)
+                            .onSubmit {
+                                if !isShiftKeyPressed() {
+                                    sendMessage()
                                 }
                             }
+                            .onChange(of: textInput) { _ in
+                                DispatchQueue.main.async {
+                                    if textInput.last == "\n" && !isShiftKeyPressed() {
+                                        textInput.removeLast()
+                                        sendMessage()
+                                    }
+                                }
+                            }
+                        
+                        Button {
+                            sendMessage() // 改为直接调用sendMessage方法
                         } label: {
                             Image(systemName: "paperplane.fill")
                                 .padding(10)
@@ -164,6 +158,41 @@ struct ChatView: View {
                 )
             }
         }
+    }
+
+    private func sendMessage() {
+        guard !textInput.isEmpty || !displayedImages.isEmpty else { return }
+        let currentText = textInput
+        let currentImages = displayedImages // 保存当前图片
+        textInput = ""
+        displayedImages = [] // 立即清空图片列表
+        Task { @MainActor in
+            do {
+                if currentImages.isEmpty {
+                    try await viewModel.sendText(currentText, using: llmProvider)
+                } else {
+                    try await viewModel.sendMessage(text: currentText,
+                                                   images: currentImages, // 使用保存的图片
+                                                   using: llmProvider)
+                }
+                isInputFocused = true
+            } catch {
+                let toastMessage = "发送失败: \(error.localizedDescription)"
+                #if os(iOS)
+                Toast.show(message: toastMessage)
+                #else
+                NSAlert.showToast(message: toastMessage)
+                #endif
+            }
+        }
+    }
+
+    private func isShiftKeyPressed() -> Bool {
+        #if os(macOS)
+        return NSEvent.modifierFlags.contains(.shift)
+        #else
+        return false
+        #endif
     }
 }
 
@@ -255,3 +284,4 @@ extension NSAlert {
         }
     }
 }
+
