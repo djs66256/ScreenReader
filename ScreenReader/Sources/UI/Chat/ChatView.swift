@@ -7,6 +7,17 @@ import AppKit
 #endif
 
 // 在文件顶部添加环境变量定义
+struct LLMProviderKey: EnvironmentKey {
+    static let defaultValue: LLMProvider = LLMProviderFactory.defaultProvider
+}
+
+extension EnvironmentValues {
+    var llmProvider: LLMProvider {
+        get { self[LLMProviderKey.self] }
+        set { self[LLMProviderKey.self] = newValue }
+    }
+}
+
 struct SelectedImagesKey: EnvironmentKey {
     static let defaultValue: [NSImage] = []
 }
@@ -21,6 +32,7 @@ extension EnvironmentValues {
 // 修改ChatView结构体，添加环境变量声明
 struct ChatView: View {
     @Environment(\.selectedImages) var selectedImages
+    @Environment(\.llmProvider) var llmProvider
     @StateObject var viewModel = ChatViewModel()
     @State var textInput = ""
     @FocusState private var isInputFocused: Bool  // 添加焦点状态
@@ -105,9 +117,27 @@ struct ChatView: View {
                             .contentShape(Rectangle())
                         
                         Button {
-                            viewModel.sendText(textInput)
-                            textInput = ""
-                            isInputFocused = true
+                            Task { @MainActor in
+                                do {
+                                    if selectedImages.isEmpty {
+                                        try await viewModel.sendText(textInput, using: llmProvider)
+                                    } else {
+                                        try await viewModel.sendMessage(text: textInput, 
+                                                                       images: selectedImages,
+                                                                       using: llmProvider)
+                                    }
+                                    textInput = ""
+                                    isInputFocused = true
+                                } catch {
+                                    // 使用Toast显示错误
+                                    let toastMessage = "发送失败: \(error.localizedDescription)"
+                                    #if os(iOS)
+                                    Toast.show(message: toastMessage)
+                                    #else
+                                    NSAlert.showToast(message: toastMessage)
+                                    #endif
+                                }
+                            }
                         } label: {
                             Image(systemName: "paperplane.fill")
                                 .padding(10)
@@ -211,5 +241,32 @@ struct ChatView_Previews: PreviewProvider {
                     .environment(\.selectedImages, [redImage, blueImage, greenImage])
         }
         .frame(width: 500, height: 800) // 设置预览窗口大小
+    }
+}
+
+extension NSAlert {
+    static func showToast(message: String, duration: TimeInterval = 3.0) {
+        DispatchQueue.main.async {
+            let alert = NSAlert()
+            alert.messageText = message
+            alert.alertStyle = .informational
+            alert.addButton(withTitle: "OK")
+            
+            // Show the alert without making it modal
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 300, height: 100),
+                                styleMask: [.titled],
+                                backing: .buffered,
+                                defer: false)
+            window.center()
+            window.isReleasedWhenClosed = false
+            alert.beginSheetModal(for: window) { _ in
+                window.close()
+            }
+            
+            // Auto-dismiss after duration
+            DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
+                window.close()
+            }
+        }
     }
 }

@@ -4,19 +4,39 @@ protocol LLMProvider {
     /// 发送消息序列并获取响应流
     func send(messages: [Message]) async throws -> AsyncThrowingStream<Message, Error>
     
-    /// 获取模型支持的最大上下文长度
-//    var maxContextLength: Int { get }
-    
     /// 当前使用的模型名称
-//    var modelName: String { get }
-    
-    /// 计算消息序列的token数量
-//    func countTokens(_ messages: [Message]) throws -> Int
+    var modelName: String { get }
 }
 
-extension LLMProvider {
-    /// 便捷方法：发送单条消息
-    func send(_ message: Message) async throws -> AsyncThrowingStream<Message, Error> {
-        try await send(messages: [message])
+enum LLMProviderFactory {
+    static func createProvider(config: LLMProviderConfig, model: LLMModel) throws -> LLMProvider {
+        do {
+            if config.id.lowercased().contains("openai") {
+                return OpenAIProvider(config: config, model: model)
+            }
+            throw NSError(domain: "LLMProviderFactory", code: 400, userInfo: [NSLocalizedDescriptionKey: "Unsupported provider type"])
+        } catch {
+            return defaultProvider
+        }
+    }
+
+    static var defaultProvider: LLMProvider {
+        let defaultConfig = LLMProviderConfig(
+            id: "default-openai",
+            name: "Default OpenAI",
+            apiKey: nil,
+            defaultBaseURL: "https://api.openai.com/v1",
+            supportedModelIDs: ["gpt-3.5-turbo"]
+        )
+        let defaultModel = LLMModel(
+            id: "gpt-3.5-turbo",
+            name: "GPT-3.5 Turbo",
+            capabilities: [.chat],
+            maxTokens: 4096,
+            defaultTemperature: 0.7,
+            thinkToken: nil
+        )
+        return OpenAIProvider(config: defaultConfig, model: defaultModel)
     }
 }
+

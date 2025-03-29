@@ -37,11 +37,12 @@ class OpenAIProvider: LLMProvider {
     private let config: LLMProviderConfig
     private let model: LLMModel  // 新增model属性
     
-    private var apiKey: String {
-        config.apiKey ?? ""
+    private var apiKey: String? {
+        config.apiKey
     }
+
     var modelName: String {
-        model.id  // 从LLMModel获取模型ID
+        model.name  // 从LLMModel获取模型ID
     }
     
     init(config: LLMProviderConfig, model: LLMModel) {
@@ -53,8 +54,11 @@ class OpenAIProvider: LLMProvider {
     }
     
     func send(messages: [Message]) async throws -> AsyncThrowingStream<Message, Error> {
+        guard let apiKey = config.apiKey else {
+            throw NSError(domain: "OpenAIProvider", code: 401, userInfo: [NSLocalizedDescriptionKey: "API key is not configured"])
+        }
         guard let url = URL(string: config.defaultBaseURL ?? "") else {
-            fatalError("API URL is not configured")
+            throw NSError(domain: "OpenAIProvider", code: 400, userInfo: [NSLocalizedDescriptionKey: "API URL is not configured"])
         }
         
         let headers = [
