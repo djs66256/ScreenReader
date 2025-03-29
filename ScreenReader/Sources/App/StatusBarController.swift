@@ -10,6 +10,12 @@ public class StatusBarController: NSObject {
         statusItem.button?.image = NSImage(systemSymbolName: "eye", accessibilityDescription: "Screen Reader")
         
         let menu = NSMenu()
+        
+        // 新增打开聊天按钮
+        let chatItem = NSMenuItem(title: "打开聊天", action: #selector(openChat), keyEquivalent: "c")
+        chatItem.target = self
+        menu.addItem(chatItem)
+        
         let captureItem = NSMenuItem(title: "截图分析", action: #selector(captureScreen), keyEquivalent: "s")
         captureItem.target = self
         menu.addItem(captureItem)
@@ -82,5 +88,29 @@ public class StatusBarController: NSObject {
     
     @objc func quitApp() {
         NSApp.terminate(nil)
+    }
+}
+
+// 在文件末尾添加新的方法
+extension StatusBarController {
+    @objc func openChat() {
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            let chatWindow = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+                styleMask: [.titled, .closable, .miniaturizable, .resizable],
+                backing: .buffered,
+                defer: false
+            )
+            chatWindow.title = "聊天"
+            chatWindow.center()
+            
+            let chatView = ChatView()
+            chatWindow.contentView = NSHostingView(rootView: chatView)
+            chatWindow.makeKeyAndOrderFront(nil)
+            
+            // 保持窗口引用，防止被释放
+            chatWindow.isReleasedWhenClosed = false
+        }
     }
 }

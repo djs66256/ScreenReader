@@ -6,9 +6,24 @@ import UIKit
 import AppKit
 #endif
 
+// 在文件顶部添加环境变量定义
+struct SelectedImagesKey: EnvironmentKey {
+    static let defaultValue: [NSImage] = []
+}
+
+extension EnvironmentValues {
+    var selectedImages: [NSImage] {
+        get { self[SelectedImagesKey.self] }
+        set { self[SelectedImagesKey.self] = newValue }
+    }
+}
+
+// 修改ChatView结构体，添加环境变量声明
 struct ChatView: View {
+    @Environment(\.selectedImages) var selectedImages
     @StateObject var viewModel = ChatViewModel()
     @State var textInput = ""
+    @FocusState private var isInputFocused: Bool  // 添加焦点状态
     
     private func scrollToBottom(proxy: ScrollViewProxy) {
         guard let last = viewModel.messages.last else { return }
@@ -21,123 +36,128 @@ struct ChatView: View {
         VStack(spacing: 0) {
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(spacing: 12) {
+                    LazyVStack(spacing: 8) {
                         ForEach(viewModel.messages, id: \.id) { message in
                             MessageView(message: message)
-                                .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                                .transition(.opacity)
                                 .id(message.id)
                         }
                     }
-                    .padding(.vertical, 16)
+                    .padding(.vertical, 12)
                 }
-                .background(Color(nsColor: .windowBackgroundColor))  // 修改为macOS专用颜色
-                .onChange(of: viewModel.messages) { _, _ in
-                    scrollToBottom(proxy: proxy)
-                }
+                .background(Color(.windowBackgroundColor))
+                .overlay(
+                    Divider()
+                        .background(Color(.separatorColor))
+                        .frame(maxWidth: .infinity),
+                    alignment: .bottom
+                )
             }
             
             HStack {
-                TextField("输入消息...", text: $textInput)
-                    .textFieldStyle(.roundedBorder)
-                    .padding(.vertical, 8)
-                
-                Button {
-                    viewModel.sendText(textInput)
-                    textInput = ""
-                } label: {
-                    Image(systemName: "paperplane.fill")
-                        .padding(10)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .clipShape(Circle())
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal)
-            .padding(.bottom, 8)
-            .background(Color(nsColor: .controlBackgroundColor))  // 修改为macOS专用颜色
-        }
-    }
-}
-
-struct MessageView: View {
-    let message: ChatMessage
-    
-    var body: some View {
-        HStack {
-            if message.isUser {
-                Spacer()
-            }
-            
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(message.contents) { content in
-                    switch content.type {
-                    case .text:
-                        Markdown(content.value)
-                            .markdownTheme(.gitHub)
-                            .textSelection(.enabled)
-                            .markdownTextStyle {
-                                BackgroundColor(.clear)
-                                ForegroundColor(.clear)
+                VStack(spacing: 0) {
+                    // 图片预览区域 - 现在放在输入框上方
+                    if !selectedImages.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(0..<selectedImages.count, id: \.self) { index in
+                                    Image(nsImage: selectedImages[index])
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 60, height: 60)  // 修改为60x60
+                                        .cornerRadius(4)
+                                        .overlay(
+                                            Button(action: {
+                                                // 移除图片逻辑
+                                            }) {
+                                                Image(systemName: "xmark.circle.fill")
+                                                    .font(.system(size: 16))  // 相应缩小关闭按钮
+                                                    .foregroundColor(.white)
+                                                    .background(Color.black.opacity(0.6))
+                                                    .clipShape(Circle())
+                                            }
+                                            .buttonStyle(.plain)
+                                            .padding(2),
+                                            alignment: .topTrailing
+                                        )
+                                }
                             }
-                    case .imageURL:
-                        AsyncImage(url: URL(string: content.value)) { image in
-                            image.resizable().scaledToFit()
-                        } placeholder: {
-                            ProgressView()
+                            .padding(.horizontal, 12)
+                            .padding(.top, 8)
                         }
-                    case .imageData:
-                        // 处理base64图片数据
-                        if let data = content.imageData {
-                            #if canImport(UIKit)
-                            if let uiImage = UIImage(data: data) {
-                                Image(uiImage: uiImage)
-                                    .resizable()
-                                    .scaledToFit()
-                            }
-                            #elseif canImport(AppKit)
-                            if let nsImage = NSImage(data: data) {
-                                Image(nsImage: nsImage)
-                                    .resizable()
-                                    .scaledToFit()
-                            }
-                            #endif
+                    }
+                    
+                    // 输入区域
+                    HStack(alignment: .bottom, spacing: 8) {
+                        TextField("输入消息...", text: $textInput, axis: .vertical)
+                            .textFieldStyle(.plain)
+                            .padding(10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color(.controlBackgroundColor))
+                                    .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color(.separatorColor).opacity(0.5), lineWidth: 1)
+                            )
+                            .focused($isInputFocused)
+                            .contentShape(Rectangle())
+                        
+                        Button {
+                            viewModel.sendText(textInput)
+                            textInput = ""
+                            isInputFocused = true
+                        } label: {
+                            Image(systemName: "paperplane.fill")
+                                .padding(10)
+                                .background(
+                                    Circle()
+                                        .fill(Color.accentColor)
+                                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+                                )
+                                .foregroundColor(.white)
                         }
-                    case .thinking:
-                        Markdown("_\(content.value)_")
-                            .markdownTheme(.gitHub)
+                        .buttonStyle(.plain)
+                        .keyboardShortcut(.return, modifiers: [])
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.top, 8)
+                    .padding(.bottom, 12)
+                    .background(Color(.windowBackgroundColor))
+                    .onAppear {
+                        isInputFocused = true
                     }
                 }
-            }
-            .padding(12)
-            .background(
-                Group {
-                    if message.isUser {
-                        LinearGradient(gradient: Gradient(colors: [
-                            Color(red: 0.2, green: 0.5, blue: 1.0),
-                            Color(red: 0.1, green: 0.4, blue: 0.9)
-                        ]), startPoint: .topLeading, endPoint: .bottomTrailing)
-                    } else {
-                        Color(nsColor: .controlBackgroundColor).opacity(0.9)
-                    }
-                }
-            )
-            .foregroundColor(message.isUser ? .white : .primary)
-            .cornerRadius(18)
-            .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
-            
-            if !message.isUser {
-                Spacer()
+                .background(Color(.windowBackgroundColor))
+                .background(
+                    Divider()
+                        .background(Color(.separatorColor))
+                        .frame(height: 1),
+                    alignment: .top
+                )
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 4)
     }
 }
 
 // 添加预览代码
 struct ChatView_Previews: PreviewProvider {
+    // 创建纯色图片
+    static func solidColorImage(color: NSColor, size: NSSize = NSSize(width: 200, height: 200)) -> NSImage {
+        let image = NSImage(size: size)
+        image.lockFocus()
+        color.drawSwatch(in: NSRect(origin: .zero, size: size))
+        image.unlockFocus()
+        return image
+    }
+    
     static var previews: some View {
+        // 创建几种纯色图片
+        let redImage = solidColorImage(color: .systemRed)
+        let blueImage = solidColorImage(color: .systemBlue)
+        let greenImage = solidColorImage(color: .systemGreen)
+        
         let mockMessages = [
             ChatMessage(
                 contents: [ChatContent.text("你好！`开始`**还是**")],
@@ -148,19 +168,19 @@ struct ChatView_Previews: PreviewProvider {
                 isUser: false
             ),
             ChatMessage(
-                contents: [ChatContent.imageURL(URL(string: "https://example.com/image.jpg")!)],
+                contents: [ChatContent.imageData(redImage.tiffRepresentation!), ChatContent.text("这是红色图片")],
                 isUser: true
             ),
             ChatMessage(
-                contents: [ChatContent.text("你好！`开始`**还是**")],
+                contents: [ChatContent.imageData(blueImage.tiffRepresentation!)],
                 isUser: true
             ),
             ChatMessage(
-                contents: [ChatContent.text("您好，有什么可以帮您？")],
+                contents: [ChatContent.text("这是蓝色图片")],
                 isUser: false
             ),
             ChatMessage(
-                contents: [ChatContent.imageURL(URL(string: "https://example.com/image.jpg")!)],
+                contents: [ChatContent.imageData(greenImage.tiffRepresentation!)],
                 isUser: true
             ),
             ChatMessage(
@@ -174,16 +194,22 @@ struct ChatView_Previews: PreviewProvider {
         viewModel.messages = mockMessages
         
         return Group {
-            ChatView(viewModel: viewModel)
-                .previewDisplayName("正常模式")
+                ChatView(viewModel: viewModel)
+                    .previewDisplayName("默认状态")
+                
+                ChatView(viewModel: viewModel)
+                    .preferredColorScheme(.dark)
+                    .previewDisplayName("深色模式")
             
-            ChatView(viewModel: viewModel)
-                .preferredColorScheme(.dark)
-                .previewDisplayName("深色模式")
-            
-            ChatView(viewModel: viewModel)
-                .previewDevice("iPhone SE (3rd generation)")
-                .previewDisplayName("小屏设备")
+                ChatView(viewModel: viewModel)
+                    .previewDisplayName("图片预览-亮色")
+                    .environment(\.selectedImages, [redImage, blueImage, greenImage])
+                
+                ChatView(viewModel: viewModel)
+                    .preferredColorScheme(.dark)
+                    .previewDisplayName("图片预览-暗色")
+                    .environment(\.selectedImages, [redImage, blueImage, greenImage])
         }
+        .frame(width: 500, height: 800) // 设置预览窗口大小
     }
 }
