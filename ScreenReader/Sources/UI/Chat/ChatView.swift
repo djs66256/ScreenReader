@@ -18,24 +18,19 @@ extension EnvironmentValues {
     }
 }
 
-struct SelectedImagesKey: EnvironmentKey {
-    static let defaultValue: [NSImage] = []
-}
-
-extension EnvironmentValues {
-    var selectedImages: [NSImage] {
-        get { self[SelectedImagesKey.self] }
-        set { self[SelectedImagesKey.self] = newValue }
-    }
-}
-
-// 修改ChatView结构体，添加环境变量声明
+// 移除 SelectedImagesKey 和环境变量扩展
 struct ChatView: View {
-    @Environment(\.selectedImages) var selectedImages
     @Environment(\.llmProvider) var llmProvider
-    @StateObject var viewModel = ChatViewModel()
+    @StateObject var viewModel: ChatViewModel
     @State var textInput = ""
-    @FocusState private var isInputFocused: Bool  // 添加焦点状态
+    @FocusState private var isInputFocused: Bool
+    @State private var displayedImages: [NSImage]
+    
+    @MainActor
+    init(viewModel: ChatViewModel? = nil, images: [NSImage] = []) {
+        _viewModel = StateObject(wrappedValue: viewModel ?? ChatViewModel())
+        _displayedImages = State(initialValue: images)
+    }
     
     private func scrollToBottom(proxy: ScrollViewProxy) {
         guard let last = viewModel.messages.last else { return }
@@ -68,22 +63,22 @@ struct ChatView: View {
             
             HStack {
                 VStack(spacing: 0) {
-                    // 图片预览区域 - 现在放在输入框上方
-                    if !selectedImages.isEmpty {
+                    if !displayedImages.isEmpty {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
-                                ForEach(0..<selectedImages.count, id: \.self) { index in
-                                    Image(nsImage: selectedImages[index])
+                                ForEach(0..<displayedImages.count, id: \.self) { index in
+                                    Image(nsImage: displayedImages[index])
                                         .resizable()
                                         .aspectRatio(contentMode: .fill)
-                                        .frame(width: 60, height: 60)  // 修改为60x60
+                                        .frame(width: 60, height: 60)
                                         .cornerRadius(4)
                                         .overlay(
                                             Button(action: {
-                                                // 移除图片逻辑
+                                                // 实现删除图片逻辑
+                                                displayedImages.remove(at: index)
                                             }) {
                                                 Image(systemName: "xmark.circle.fill")
-                                                    .font(.system(size: 16))  // 相应缩小关闭按钮
+                                                    .font(.system(size: 16))
                                                     .foregroundColor(.white)
                                                     .background(Color.black.opacity(0.6))
                                                     .clipShape(Circle())
@@ -117,13 +112,14 @@ struct ChatView: View {
                             .contentShape(Rectangle())
                         
                         Button {
+                            guard !textInput.isEmpty || !displayedImages.isEmpty else { return }
                             Task { @MainActor in
                                 do {
-                                    if selectedImages.isEmpty {
+                                    if displayedImages.isEmpty {
                                         try await viewModel.sendText(textInput, using: llmProvider)
                                     } else {
                                         try await viewModel.sendMessage(text: textInput, 
-                                                                       images: selectedImages,
+                                                                       images: displayedImages,
                                                                        using: llmProvider)
                                     }
                                     textInput = ""
@@ -171,7 +167,7 @@ struct ChatView: View {
     }
 }
 
-// 添加预览代码
+// 修改预览代码
 struct ChatView_Previews: PreviewProvider {
     // 创建纯色图片
     static func solidColorImage(color: NSColor, size: NSSize = NSSize(width: 200, height: 200)) -> NSImage {
@@ -227,20 +223,9 @@ struct ChatView_Previews: PreviewProvider {
                 ChatView(viewModel: viewModel)
                     .previewDisplayName("默认状态")
                 
-                ChatView(viewModel: viewModel)
-                    .preferredColorScheme(.dark)
-                    .previewDisplayName("深色模式")
-            
-                ChatView(viewModel: viewModel)
-                    .previewDisplayName("图片预览-亮色")
-                    .environment(\.selectedImages, [redImage, blueImage, greenImage])
-                
-                ChatView(viewModel: viewModel)
-                    .preferredColorScheme(.dark)
-                    .previewDisplayName("图片预览-暗色")
-                    .environment(\.selectedImages, [redImage, blueImage, greenImage])
-        }
-        .frame(width: 500, height: 800) // 设置预览窗口大小
+                ChatView(viewModel: viewModel, images: [redImage, blueImage, greenImage])
+                    .previewDisplayName("带图片预览")
+        }.frame(maxWidth: 400)
     }
 }
 
