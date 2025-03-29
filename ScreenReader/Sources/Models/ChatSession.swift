@@ -25,7 +25,7 @@ actor ChatSession {
         self.config = config ?? SessionConfig()
         
         // 直接添加系统提示
-        messages.append(Message(role: .system, textContent: self.config.systemPrompt))
+        messages.append(Message(role: .system, text: self.config.systemPrompt))
     }
     
     func send(message userMessage: Message) async throws -> AsyncThrowingStream<Message, Error> {

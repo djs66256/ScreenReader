@@ -92,14 +92,26 @@ struct ChatMessage: Identifiable, Equatable {
 extension ChatMessage {
     // 从Message转换为ChatMessage
     init(from message: Message) {
-        let contents = message.content.map { part -> ChatContent in
-            switch part.type {
-            case .text:
-                return ChatContent(type: .text, value: part.value)
-            case .imageURL:
-                return ChatContent(type: .imageURL, value: part.value)
-            case .imageData:
-                return ChatContent(type: .imageData, value: part.value)
+        let contents: [ChatContent]
+        
+        switch message.content {
+        case .singleText(let text):
+            contents = [ChatContent.text(text)]
+        case .multiModal(let parts):
+            contents = parts.map { part in
+                switch part.type {
+                case .text:
+                    return ChatContent.text(part.value)
+                case .imageURL:
+                    return ChatContent.imageURL(URL(string: part.value)!)
+                case .imageData:
+                    let base64String = part.value.replacingOccurrences(of: "data:image/jpeg;base64,", with: "")
+                    if let data = Data(base64Encoded: base64String) {
+                        return ChatContent.imageData(data)
+                    } else {
+                        return ChatContent.text("Invalid image data")
+                    }
+                }
             }
         }
         
@@ -113,24 +125,49 @@ extension ChatMessage {
     
     // 转换为Message
     func toMessage() -> Message {
-        let contentParts = contents.compactMap { content -> ContentPart? in
+        let messageContent: Message.MessageContent
+        
+        if contents.count == 1, let content = contents.first {
             switch content.type {
             case .text:
-                return ContentPart(type: .text, value: content.value)
+                messageContent = .singleText(content.value)
             case .imageURL:
-                return ContentPart(type: .imageURL, value: content.value)
+                messageContent = .multiModal([
+                    .init(type: .imageURL, value: content.value)
+                ])
             case .imageData:
-                guard let data = content.imageData else { return nil }
-                let base64 = data.base64EncodedString()
-                return ContentPart(type: .imageData, value: base64) // 简化base64处理
+                if let data = content.imageData {
+                    let base64 = data.base64EncodedString()
+                    messageContent = .multiModal([
+                        .init(type: .imageData, value: "data:image/jpeg;base64,\(base64)")
+                    ])
+                } else {
+                    messageContent = .singleText("Invalid image data")
+                }
             case .thinking:
-                return nil
+                messageContent = .singleText(content.value)
             }
+        } else {
+            let parts = contents.compactMap { content -> Message.MessageContent.ContentPart? in
+                switch content.type {
+                case .text:
+                    return .init(type: .text, value: content.value)
+                case .imageURL:
+                    return .init(type: .imageURL, value: content.value)
+                case .imageData:
+                    guard let data = content.imageData else { return nil }
+                    let base64 = data.base64EncodedString()
+                    return .init(type: .imageData, value: "data:image/jpeg;base64,\(base64)")
+                case .thinking:
+                    return nil
+                }
+            }
+            messageContent = .multiModal(parts)
         }
         
         return Message(
             role: isUser ? .user : .assistant,
-            contentParts: contentParts,
+            content: messageContent,
             timestamp: timestamp
         )
     }

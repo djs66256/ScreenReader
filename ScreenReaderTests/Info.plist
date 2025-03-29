@@ -7,7 +7,5 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
-	<key>NSScreenCaptureUsageDescription</key>
-	<string>我们需要访问您的屏幕以进行截图。</string>
 </dict>
 </plist>

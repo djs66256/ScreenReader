@@ -31,7 +31,7 @@ struct ChatView: View {
                     .padding(.vertical, 16)
                 }
                 .background(Color(nsColor: .windowBackgroundColor))  // 修改为macOS专用颜色
-                .onChange(of: viewModel.messages) { _ in
+                .onChange(of: viewModel.messages) { _, _ in
                     scrollToBottom(proxy: proxy)
                 }
             }

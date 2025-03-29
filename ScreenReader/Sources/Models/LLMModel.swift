@@ -14,7 +14,8 @@ public struct LLMModel: Identifiable, Codable, Hashable {
     public let capabilities: [Capability]
     public let maxTokens: Int?
     public let defaultTemperature: Double?
-    
+    public let thinkToken: String?
+
     // 从JSON文件加载所有模型
     public static func loadModels() -> [LLMModel] {
         guard let url = Bundle.main.url(forResource: "models", withExtension: "json"),

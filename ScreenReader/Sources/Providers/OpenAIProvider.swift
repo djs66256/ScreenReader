@@ -1,5 +1,6 @@
 import Foundation
 import Alamofire
+import os
 
 /*
 openai 传参示例：
@@ -33,70 +34,70 @@ openai 传参示例：
 }
 */
 class OpenAIProvider: LLMProvider {
-    private let apiKey: String
-    var modelName: String
+    private let config: LLMProviderConfig
+    private let model: LLMModel  // 新增model属性
     
-    init(modelName: String, apiKey: String) {
-        self.modelName = modelName
-        self.apiKey = apiKey
+    private var apiKey: String {
+        config.apiKey ?? ""
+    }
+    var modelName: String {
+        model.id  // 从LLMModel获取模型ID
+    }
+    
+    init(config: LLMProviderConfig, model: LLMModel) {
+        self.config = config
+        self.model = model
+        guard config.supportedModelIDs.contains(model.id) else {
+            fatalError("Unsupported model ID: \(model.id)")
+        }
     }
     
     func send(messages: [Message]) async throws -> AsyncThrowingStream<Message, Error> {
-        let headers: HTTPHeaders = [
+        guard let url = URL(string: config.defaultBaseURL ?? "") else {
+            fatalError("API URL is not configured")
+        }
+        
+        let headers = [
             "Authorization": "Bearer \(apiKey)",
             "Content-Type": "application/json"
         ]
-        
-        struct OpenAIMessageContent: Codable {
-            let type: String
-            let text: String?
-            let image_url: String?
+
+        struct OpenAIURLRequest: URLRequestConvertible {
+            let url: URL
+            let headers: [String: String]
+            let messages: [Message]
+            let modelName: String
             
-            init(part: ContentPart) {
-                switch part.type {
-                case .text:
-                    self.type = "input_text"
-                    self.text = part.value
-                    self.image_url = nil
-                case .imageURL, .imageData:
-                    self.type = "image_url"
-                    self.text = nil
-                    self.image_url = part.value
-                }
+            func asURLRequest() throws -> URLRequest {
+                var request = URLRequest(url: url)
+                request.httpMethod = "POST"
+                request.allHTTPHeaderFields = headers
+                
+                let openAIMessages = messages.map { $0.toOpenAIFormat() }
+                
+                let parameters: [String: Any] = [
+                    "model": modelName,
+                    "messages": openAIMessages,
+                    "stream": true
+                ]
+                
+                request.httpBody = try JSONSerialization.data(withJSONObject: parameters)
+                return request
             }
         }
-        
-        struct OpenAIMessage: Codable {
-            let role: String
-            let content: [OpenAIMessageContent]
-        }
-        
-        struct OpenAIRequest: Codable {
-            let model: String
-            let messages: [OpenAIMessage]
-            let temperature: Double
-            let stream: Bool
-        }
-        
-        let request = OpenAIRequest(
-            model: modelName,
-            messages: messages.map { message in
-                OpenAIMessage(
-                    role: message.role.rawValue,
-                    content: message.content.map { OpenAIMessageContent(part: $0) }
-                )
-            },
-            temperature: 0.7,
-            stream: true
+
+        let request = OpenAIURLRequest(
+            url: url,
+            headers: headers,
+            messages: messages,
+            modelName: modelName
         )
 
         return AsyncThrowingStream { continuation in
-            let request = AF.streamRequest(
-                "https://api.openai.com/v1/chat/completions",
-                method: .post,
-                parameters: request,
-                encoder: JSONParameterEncoder.default,
-                headers: headers,
+            let textLock = OSAllocatedUnfairLock()
+            var text = ""
+            let dataRequest = AF.streamRequest(
+                request,
                 automaticallyCancelOnStreamError: true
             )
             .responseStream { stream in
@@ -117,11 +118,16 @@ class OpenAIProvider: LLMProvider {
                                    let firstChoice = choices.first,
                                    let delta = firstChoice["delta"] as? [String: Any],
                                    let content = delta["content"] as? String {
-                                    
-                                    let message = Message(
-                                        role: .assistant,
-                                        textContent: content
-                                    )
+
+                                    let message = textLock.withLock {
+                                        text += content
+
+                                         return Message(
+                                            role: .assistant,
+                                            text: text
+                                        )
+                                    }
+
                                     continuation.yield(message)
                                 }
                             }
@@ -143,8 +149,35 @@ class OpenAIProvider: LLMProvider {
             }
             
             continuation.onTermination = { @Sendable _ in
-                request.cancel()
+                dataRequest.cancel()
             }
         }
+    }
+}
+
+
+extension Message {
+    /// 将消息转换为OpenAI API兼容格式
+    func toOpenAIFormat() -> [String: Any] {
+        var content: Any
+        
+        switch self.content {
+        case .singleText(let text):
+            content = text
+        case .multiModal(let parts):
+            content = parts.map { part in
+                switch part.type {
+                case .text:
+                    return ["type": "text", "text": part.value]
+                case .imageURL, .imageData:
+                    return ["type": "image_url", "image_url": part.value]
+                }
+            }
+        }
+        
+        return [
+            "role": self.role.rawValue,
+            "content": content
+        ]
     }
 }
