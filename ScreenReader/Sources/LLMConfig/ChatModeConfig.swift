@@ -3,7 +3,7 @@ import Foundation
 struct ChatModeConfig: Codable {
     var provider: LLMProviderConfig
     var model: LLMModelConfig
-    var rulers: [LLMRulerConfig]
+    var rules: [LLMRuleConfig]
 }
 
 protocol ChatModeConfigRepository {

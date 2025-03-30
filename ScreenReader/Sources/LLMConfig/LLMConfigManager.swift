@@ -6,7 +6,7 @@ final class LLMConfigManager {
     // 配置repository
     let providerConfigRepository: any LLMProviderConfigRepository
     let modelConfigRepository: any LLMModelConfigRepository
-    let rulerConfigRepository: any LLMRulerConfigRepository
+    let ruleConfigRepository: any LLMRuleConfigRepository
     let chatModeConfigRepository: any ChatModeConfigRepository
     
     // 模板repository
@@ -17,7 +17,7 @@ final class LLMConfigManager {
         // 初始化所有repository
         providerConfigRepository = LLMProviderConfigActorRepository()
         modelConfigRepository = LLMModelConfigActorRepository()
-        rulerConfigRepository = LLMRulerConfigActorRepository()
+        ruleConfigRepository = LLMRuleConfigActorRepository()
         chatModeConfigRepository = ChatModeConfigActorRepository()
         
         providerTemplateRepository = LLMProviderConfigTemplateActorRepository()

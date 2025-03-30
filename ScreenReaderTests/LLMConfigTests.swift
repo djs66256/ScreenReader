@@ -28,8 +28,8 @@ final class LLMConfigTests: XCTestCase {
     
     func testConfigManagerRepositoriesInitialized() {
         XCTAssertNotNil(configManager.providerConfigRepository)
-        XCTAssertNotNil(configManager.modelConfigRepository)
-        XCTAssertNotNil(configManager.rulerConfigRepository)
+         XCTAssertNotNil(configManager.modelConfigRepository)
+        XCTAssertNotNil(configManager.ruleConfigRepository)
         XCTAssertNotNil(configManager.chatModeConfigRepository)
         XCTAssertNotNil(configManager.providerTemplateRepository)
         XCTAssertNotNil(configManager.modelTemplateRepository)

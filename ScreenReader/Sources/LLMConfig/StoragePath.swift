@@ -45,10 +45,10 @@ enum StoragePath {
         }
     }
     
-    enum Rulers {
+    enum Rules {
         static func configFile(id: String) -> URL {
             configsDirectory
-                .appendingPathComponent("Rulers")
+                .appendingPathComponent("Rules")
                 .appendingPathComponent("\(id).json")
         }
     }
