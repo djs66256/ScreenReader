@@ -15,7 +15,7 @@ protocol LLMModelConfigTemplateRepository {
     func getAllModelTemplates() async -> [LLMModelConfigTemplate]
 }
 
-struct LLMModelConfig: Codable {
+struct LLMModelConfig: Codable, Equatable, Hashable {
     var modelName: String
     var systemPrompt: String?
     var maxTokens: Int

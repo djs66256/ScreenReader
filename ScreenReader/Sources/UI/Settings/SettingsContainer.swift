@@ -43,8 +43,10 @@ struct SettingsContainer: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(minWidth: 500, minHeight: 600)
+        .frame(minWidth: 800, minHeight: 600)
         .environment(\.ruleConfigRepository, LLMConfigManager.shared.ruleConfigRepository)
+        .environment(\.llmProviderConfigRepository, LLMConfigManager.shared.providerConfigRepository)
+        .environment(\.chatModeConfigRepository, LLMConfigManager.shared.chatModeConfigRepository)
     }
 }
 

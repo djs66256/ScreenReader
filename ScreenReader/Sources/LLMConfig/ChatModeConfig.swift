@@ -1,8 +1,10 @@
 import Foundation
 
-struct ChatModeConfig: Codable {
-    var provider: LLMProviderConfig
-    var model: LLMModelConfig
+struct ChatModeConfig: Codable, Identifiable, Hashable, Equatable {
+    var id: String
+    var name: String
+    var provider: LLMProviderConfig?
+    var model: LLMModelConfig?
     var rules: [LLMRuleConfig]
 }
 
@@ -12,4 +14,8 @@ protocol ChatModeConfigRepository {
     func createChatMode(config: ChatModeConfig) async -> ChatModeConfig
     func updateChatMode(config: ChatModeConfig) async -> Bool
     func deleteChatMode(id: String) async
+}
+
+extension Notification.Name {
+    static let chatModeConfigChanged = Notification.Name("ChatModeConfigChanged")
 }

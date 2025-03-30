@@ -4,14 +4,12 @@ protocol LLMProvider {
     /// 发送消息序列并获取响应流
     func send(messages: [Message]) async throws -> AsyncThrowingStream<Message, Error>
     
-    /// 当前使用的模型名称
-    var modelName: String { get }
 }
 
 enum LLMProviderFactory {
     static func createProvider(config: ChatModeConfig) throws -> LLMProvider {
         do {
-            if config.provider.id.lowercased().contains("openai") {
+            if let provider = config.provider, provider.id.lowercased().contains("openai") {
                 return OpenAIProvider(config: config)
             }
             throw NSError(domain: "LLMProviderFactory", code: 400, userInfo: [NSLocalizedDescriptionKey: "Unsupported provider type"])
@@ -22,6 +20,8 @@ enum LLMProviderFactory {
 
     static var defaultProvider: LLMProvider {
         let defaultConfig = ChatModeConfig(
+            id: "default",
+            name: "Default",
             provider: LLMProviderConfig(
                 id: "ollama",
                 name: "Ollama",

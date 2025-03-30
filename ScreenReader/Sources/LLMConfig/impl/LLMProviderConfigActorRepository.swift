@@ -44,5 +44,6 @@ actor LLMProviderConfigActorRepository: LLMProviderConfigRepository {
     private func saveConfigs(_ configs: [LLMProviderConfig]) {
         let data = try? JSONEncoder().encode(configs)
         try? data?.write(to: storageFileURL)
+        NotificationCenter.default.post(name: .llmProviderConfigChanged, object: nil)
     }
 }

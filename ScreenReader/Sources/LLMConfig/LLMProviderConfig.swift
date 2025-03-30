@@ -10,7 +10,7 @@ protocol LLMProviderConfigTemplateRepository {
     func getAllConfigTemplates() async -> [LLMProviderConfigTemplate]
 }
 
-struct LLMProviderConfig: Codable {
+struct LLMProviderConfig: Codable, Equatable, Identifiable, Hashable {
     var id: String
     var name: String
     var defaultBaseURL: String?
@@ -40,4 +40,8 @@ protocol LLMProviderConfigRepository {
     func createConfig(config: LLMProviderConfig) async -> LLMProviderConfig
     func updateConfig(config: LLMProviderConfig) async -> Bool
     func deleteConfig(id: String) async
+}
+
+extension Notification.Name {
+    static let llmProviderConfigChanged = Notification.Name("LLMProviderConfigChanged")
 }

@@ -23,10 +23,10 @@ struct RulesSettingsView: View {
     var body: some View {
         SidebarSettingsView(
             items: $rules,
-            selection: $selection, // 传递选择绑定
+            selection: $selection,
             leftContent: { rule in
                 HStack {
-                    Image(systemName: "text.bubble")
+                    Image(systemName: "list.bullet.rectangle")  // 修改为更符合规则的图标
                     Text(rule.name)
                 }
             },
@@ -141,7 +141,8 @@ struct RuleDetailView: View {
                             get: { rule.systemPrompt ?? "" },
                             set: { rule.systemPrompt = $0.isEmpty ? nil : $0 }
                         ))
-                        .frame(minHeight: 120)
+                        .font(.system(size: 14))  // 新增：增大字体大小
+                        .frame(minHeight: 180)    // 修改：增加高度
                         .padding(10)
                         .background(Color(.controlBackgroundColor))
                         .cornerRadius(6)
@@ -154,6 +155,7 @@ struct RuleDetailView: View {
                             _ = await repository.updateRule(rule: rule)
                         }
                     }
+                    .controlSize(.large)
                     .buttonStyle(.borderedProminent)
                     
                     Button("删除", role: .destructive) {
@@ -161,6 +163,7 @@ struct RuleDetailView: View {
                             await repository.deleteRule(id: rule.id)
                         }
                     }
+                    .controlSize(.large)
                     .buttonStyle(.bordered)
                 }
             }

@@ -37,15 +37,15 @@ class OpenAIProvider: LLMProvider {
     private let config: ChatModeConfig
     
     private var apiKey: String? {
-        config.provider.apiKey
+        config.provider?.apiKey
     }
 
-    var modelName: String {
-        config.model.modelName
+    var modelName: String? {
+        config.model?.modelName
     }
 
     var baseURLString: String? {
-        config.provider.defaultBaseURL
+        config.provider?.defaultBaseURL
     }
 
     init(config: ChatModeConfig) {
@@ -55,6 +55,9 @@ class OpenAIProvider: LLMProvider {
     func send(messages: [Message]) async throws -> AsyncThrowingStream<Message, Error> {
         guard let apiKey = apiKey else {
             throw NSError(domain: "OpenAIProvider", code: 401, userInfo: [NSLocalizedDescriptionKey: "API key is not configured"])
+        }
+        guard let modelName = modelName else {
+            throw NSError(domain: "OpenAIProvider", code: 400, userInfo: [NSLocalizedDescriptionKey: "Model name is not configured"])
         }
         guard let url = URL(string: baseURLString ?? "") else {
             throw NSError(domain: "OpenAIProvider", code: 400, userInfo: [NSLocalizedDescriptionKey: "API URL is not configured"])
