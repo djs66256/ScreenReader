@@ -1,6 +1,7 @@
 import Foundation
 
 actor LLMRuleConfigActorRepository: LLMRuleConfigRepository {
+    private let notificationCenter = NotificationCenter.default
     private let storageFileURL: URL
     private let defaultTemplatesURL = StoragePath.templatesBaseDirectory
         .appendingPathComponent("DefaultRules.json")
@@ -44,8 +45,11 @@ actor LLMRuleConfigActorRepository: LLMRuleConfigRepository {
     
     func updateRule(rule: LLMRuleConfig) async -> Bool {
         var rules = await getAllRules()
-        guard let index = rules.firstIndex(where: { $0.id == rule.id }) else { return false }
-        rules[index] = rule
+        if let index = rules.firstIndex(where: { $0.id == rule.id }) {
+            rules[index] = rule
+        } else {
+            rules.append(rule)
+        }
         saveRules(rules)
         return true
     }
@@ -59,5 +63,6 @@ actor LLMRuleConfigActorRepository: LLMRuleConfigRepository {
     private func saveRules(_ rules: [LLMRuleConfig]) {
         let data = try? JSONEncoder().encode(rules)
         try? data?.write(to: storageFileURL)
+        notificationCenter.post(name: .llmRuleConfigChanged, object: nil)
     }
 }

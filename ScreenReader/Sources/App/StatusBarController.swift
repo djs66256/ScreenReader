@@ -78,7 +78,7 @@ public class StatusBarController: NSObject {
             settingsWindow.title = "设置"
             settingsWindow.center()
             
-            let settingsView = SettingsView()
+            let settingsView = SettingsContainer()
             settingsWindow.contentView = NSHostingView(rootView: settingsView)
             settingsWindow.makeKeyAndOrderFront(nil)
             

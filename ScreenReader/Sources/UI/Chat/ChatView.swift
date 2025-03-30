@@ -156,16 +156,6 @@ struct ChatView: View {
             }
         }
         .environment(\.llmProvider, currentProvider)
-        .onReceive(NotificationCenter.default.publisher(for: LLMManager.providerDidChange)) { _ in
-            Task { @MainActor in
-                if let providerID = LLMManager.shared.selectedProviderID,
-                   let providerConfig = LLMManager.shared.provider(forID: providerID) {
-//                    currentProvider = LLMProviderFactory.makeProvider(from: providerConfig)
-                } else {
-                    currentProvider = LLMProviderFactory.defaultProvider
-                }
-            }
-        }
     }
 
     private func sendMessage() {
