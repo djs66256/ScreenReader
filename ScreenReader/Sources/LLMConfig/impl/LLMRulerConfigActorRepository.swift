@@ -2,12 +2,27 @@ import Foundation
 
 actor LLMRulerConfigActorRepository: LLMRulerConfigRepository {
     private let storageFileURL: URL
+    private let defaultTemplatesURL = StoragePath.templatesBaseDirectory
+        .appendingPathComponent("DefaultRulers.json")
     
     init() {
         let rulersDirectory = StoragePath.configsDirectory
             .appendingPathComponent("Rulers")
         try? FileManager.default.createDirectory(at: rulersDirectory, withIntermediateDirectories: true)
         storageFileURL = rulersDirectory.appendingPathComponent("Rulers.json")
+        
+        // 检查是否是首次启动
+        if !FileManager.default.fileExists(atPath: storageFileURL.path) {
+            // 从模板加载默认配置
+            if let defaultRulers = loadDefaultRulers() {
+                saveRulers(defaultRulers)
+            }
+        }
+    }
+    
+    private func loadDefaultRulers() -> [LLMRulerConfig]? {
+        guard let data = try? Data(contentsOf: defaultTemplatesURL) else { return nil }
+        return try? JSONDecoder().decode([LLMRulerConfig].self, from: data)
     }
     
     func getAllRulers() async -> [LLMRulerConfig] {

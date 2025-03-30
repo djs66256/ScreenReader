@@ -1,0 +1,17 @@
+[
+    {
+        "id": "SwiftUI",
+        "name": "SwiftUI",
+        "systemPrompt": "使用SwiftUI编写代码"
+    },
+    {
+        "id": "UIKit",
+        "name": "UIKit",
+        "systemPrompt": "使用UIKit编写代码"
+    },
+    {
+        "id": "snapkit",
+        "name": "snapkit", 
+        "systemPrompt": "使用SnapKit布局视图"
+    }
+]
