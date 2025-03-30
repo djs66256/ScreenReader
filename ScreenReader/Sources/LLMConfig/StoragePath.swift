@@ -9,7 +9,7 @@ enum StoragePath {
         return directory
     }()
     
-    private static let templatesBaseDirectory: URL = {
+    public static let templatesBaseDirectory: URL = {
         Bundle.main.bundleURL
             .appendingPathComponent("Contents/Resources/Templates")
     }()

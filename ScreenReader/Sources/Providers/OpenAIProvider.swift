@@ -34,30 +34,29 @@ openai 传参示例：
 }
 */
 class OpenAIProvider: LLMProvider {
-    private let config: LLMProviderConfig
-    private let model: LLMModel  // 新增model属性
+    private let config: ChatModeConfig
     
     private var apiKey: String? {
-        config.apiKey
+        config.provider.apiKey
     }
 
     var modelName: String {
-        model.name  // 从LLMModel获取模型ID
+        config.model.modelName
     }
-    
-    init(config: LLMProviderConfig, model: LLMModel) {
+
+    var baseURLString: String? {
+        config.provider.defaultBaseURL
+    }
+
+    init(config: ChatModeConfig) {
         self.config = config
-        self.model = model
-        guard config.supportedModelIDs.contains(model.id) else {
-            fatalError("Unsupported model ID: \(model.id)")
-        }
     }
     
     func send(messages: [Message]) async throws -> AsyncThrowingStream<Message, Error> {
-        guard let apiKey = config.apiKey else {
+        guard let apiKey = apiKey else {
             throw NSError(domain: "OpenAIProvider", code: 401, userInfo: [NSLocalizedDescriptionKey: "API key is not configured"])
         }
-        guard let url = URL(string: config.defaultBaseURL ?? "") else {
+        guard let url = URL(string: baseURLString ?? "") else {
             throw NSError(domain: "OpenAIProvider", code: 400, userInfo: [NSLocalizedDescriptionKey: "API URL is not configured"])
         }
         
