@@ -1,0 +1,12 @@
+[
+  {
+    "id": "default_ruler",
+    "name": "默认规则集",
+    "systemPrompt": "你是一个专业的文本分析助手，请用简洁明了的语言回答用户问题。"
+  },
+  {
+    "id": "creative_writer",
+    "name": "创意写作助手",
+    "systemPrompt": "请用生动富有想象力的语言进行创作，适当使用比喻和拟人手法。"
+  }
+]
