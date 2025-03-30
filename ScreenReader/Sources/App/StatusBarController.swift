@@ -54,12 +54,13 @@ public class StatusBarController: NSObject {
                     chatWindow.center()
                     
                     // 创建 ChatView 并传递图片数据
-                    let chatView = ChatView()
-                    // 这里假设 ChatViewModel 有接收图片数据的方法
-                    // chatView.viewModel.receiveImageData(imageData)
+                    let chatView = ChatView(images: [image])
                     
                     chatWindow.contentView = NSHostingView(rootView: chatView)
                     chatWindow.makeKeyAndOrderFront(nil)
+                    
+                    // 保持窗口引用，防止被释放
+                    chatWindow.isReleasedWhenClosed = false
                 }
             }
         }
@@ -89,10 +90,7 @@ public class StatusBarController: NSObject {
     @objc func quitApp() {
         NSApp.terminate(nil)
     }
-}
-
-// 在文件末尾添加新的方法
-extension StatusBarController {
+    
     @objc func openChat() {
         DispatchQueue.main.async {
             NSApp.activate(ignoringOtherApps: true)

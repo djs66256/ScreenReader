@@ -80,10 +80,19 @@ public final class LLMManager {
         }
     }
     
+    public static let providerDidChange = Notification.Name("LLMProviderDidChange")
+    
     public func setSelectedProvider(_ id: String?) {
+        var shouldNotify = false
         withLock {
+            let oldID = _selectedProviderID
             _selectedProviderID = id
             save()
+            shouldNotify = oldID != id
+        }
+        
+        if shouldNotify {
+            NotificationCenter.default.post(name: Self.providerDidChange, object: nil)
         }
     }
     

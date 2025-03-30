@@ -26,17 +26,14 @@ struct ChatView: View {
     @FocusState private var isInputFocused: Bool
     @State private var displayedImages: [NSImage]
     
+    // 添加状态来跟踪当前provider
+    @State private var currentProvider: LLMProvider
+    
     @MainActor
     init(viewModel: ChatViewModel? = nil, images: [NSImage] = []) {
         _viewModel = StateObject(wrappedValue: viewModel ?? ChatViewModel())
         _displayedImages = State(initialValue: images)
-    }
-    
-    private func scrollToBottom(proxy: ScrollViewProxy) {
-        guard let last = viewModel.messages.last else { return }
-        withAnimation {
-            proxy.scrollTo(last.id, anchor: .bottom)
-        }
+        _currentProvider = State(initialValue: LLMProviderFactory.defaultProvider)
     }
     
     var body: some View {
@@ -158,6 +155,17 @@ struct ChatView: View {
                 )
             }
         }
+        .environment(\.llmProvider, currentProvider)
+        .onReceive(NotificationCenter.default.publisher(for: LLMManager.providerDidChange)) { _ in
+            Task { @MainActor in
+                if let providerID = LLMManager.shared.selectedProviderID,
+                   let providerConfig = LLMManager.shared.provider(forID: providerID) {
+//                    currentProvider = LLMProviderFactory.makeProvider(from: providerConfig)
+                } else {
+                    currentProvider = LLMProviderFactory.defaultProvider
+                }
+            }
+        }
     }
 
     private func sendMessage() {
@@ -177,12 +185,7 @@ struct ChatView: View {
                 }
                 isInputFocused = true
             } catch {
-                let toastMessage = "发送失败: \(error.localizedDescription)"
-                #if os(iOS)
-                Toast.show(message: toastMessage)
-                #else
-                NSAlert.showToast(message: toastMessage)
-                #endif
+                // do nothing
             }
         }
     }

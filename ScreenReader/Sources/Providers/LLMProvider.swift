@@ -21,6 +21,23 @@ enum LLMProviderFactory {
     }
 
     static var defaultProvider: LLMProvider {
+        #if DEBUG
+        let defaultConfig = LLMProviderConfig(
+            id: "ollama",
+            name: "Ollama",
+            apiKey: "ollama",
+            defaultBaseURL: "http://ollama.qingke.ai/v1/chat/completions",
+            supportedModelIDs: ["qwen2.5-coder:7b", "qwq:32b"]
+        )
+        let defaultModel = LLMModel(
+            id: "qwq:32b",
+            name: "qwq:32b",
+            capabilities: [.chat],
+            maxTokens: 6400,
+            defaultTemperature: 0.7,
+            thinkToken: nil
+        )
+        #else
         let defaultConfig = LLMProviderConfig(
             id: "default-openai",
             name: "Default OpenAI",
@@ -36,6 +53,7 @@ enum LLMProviderFactory {
             defaultTemperature: 0.7,
             thinkToken: nil
         )
+        #endif
         return OpenAIProvider(config: defaultConfig, model: defaultModel)
     }
 }
