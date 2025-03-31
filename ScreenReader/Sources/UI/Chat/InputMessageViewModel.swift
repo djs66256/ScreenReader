@@ -25,13 +25,6 @@ class InputMessageViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    deinit {
-        // 移除通知观察者
-        if let observer = configObserver {
-            NotificationCenter.default.removeObserver(observer)
-        }
-    }
-    
     func clearInput() {
         textInput = ""
         displayedImages = []

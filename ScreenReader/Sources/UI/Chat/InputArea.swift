@@ -34,6 +34,7 @@ struct InputArea: View {
                     .padding(.horizontal, 12)
                     .padding(.top, 8)
                 }
+                .background(Color(.windowBackgroundColor))
             }
             
             HStack(alignment: .bottom, spacing: 8) {
