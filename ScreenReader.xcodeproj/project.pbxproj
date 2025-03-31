@@ -513,6 +513,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.daniel.ScreenReader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -541,6 +542,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.daniel.ScreenReader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -558,7 +560,7 @@
 				DEVELOPMENT_TEAM = PA529D52F3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ScreenReaderTests/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 15.1;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.daniel.ScreenReaderTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -577,7 +579,7 @@
 				DEVELOPMENT_TEAM = PA529D52F3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ScreenReaderTests/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 15.1;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.daniel.ScreenReaderTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -595,6 +597,7 @@
 				DEVELOPMENT_TEAM = PA529D52F3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ScreenReaderUITests/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.daniel.ScreenReaderUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -612,6 +615,7 @@
 				DEVELOPMENT_TEAM = PA529D52F3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ScreenReaderUITests/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.daniel.ScreenReaderUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";

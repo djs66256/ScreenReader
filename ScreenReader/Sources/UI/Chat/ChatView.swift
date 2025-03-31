@@ -20,20 +20,12 @@ extension EnvironmentValues {
 
 // 移除 SelectedImagesKey 和环境变量扩展
 struct ChatView: View {
-    @Environment(\.llmProvider) var llmProvider
-    @StateObject var viewModel: ChatViewModel
-    @State var textInput = ""
-    @FocusState private var isInputFocused: Bool
-    @State private var displayedImages: [NSImage]
+    @StateObject var chatViewModel: ChatViewModel
+    @StateObject var inputViewModel: InputMessageViewModel
     
-    // 添加状态来跟踪当前provider
-    @State private var currentProvider: LLMProvider
-    
-    @MainActor
-    init(viewModel: ChatViewModel? = nil, images: [NSImage] = []) {
-        _viewModel = StateObject(wrappedValue: viewModel ?? ChatViewModel())
-        _displayedImages = State(initialValue: images)
-        _currentProvider = State(initialValue: LLMProviderFactory.defaultProvider)
+    init(viewModel: ChatViewModel? = nil, inputViewModel: InputMessageViewModel = InputMessageViewModel()) {
+        _chatViewModel = StateObject(wrappedValue: viewModel ?? ChatViewModel())
+        _inputViewModel = StateObject(wrappedValue: inputViewModel)
     }
     
     var body: some View {
@@ -41,7 +33,7 @@ struct ChatView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 8) {
-                        ForEach(viewModel.messages, id: \.id) { message in
+                        ForEach(chatViewModel.messages, id: \.id) { message in
                             MessageView(message: message)
                                 .transition(.opacity)
                                 .id(message.id)
@@ -50,142 +42,23 @@ struct ChatView: View {
                     .padding(.vertical, 12)
                 }
                 .background(Color(.windowBackgroundColor))
-                .overlay(
-                    Divider()
-                        .background(Color(.separatorColor))
-                        .frame(maxWidth: .infinity),
-                    alignment: .bottom
-                )
             }
             
-            HStack {
-                VStack(spacing: 0) {
-                    if !displayedImages.isEmpty {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                                ForEach(0..<displayedImages.count, id: \.self) { index in
-                                    Image(nsImage: displayedImages[index])
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                        .frame(width: 60, height: 60)
-                                        .cornerRadius(4)
-                                        .overlay(
-                                            Button(action: {
-                                                // 实现删除图片逻辑
-                                                displayedImages.remove(at: index)
-                                            }) {
-                                                Image(systemName: "xmark.circle.fill")
-                                                    .font(.system(size: 16))
-                                                    .foregroundColor(.white)
-                                                    .background(Color.black.opacity(0.6))
-                                                    .clipShape(Circle())
-                                            }
-                                            .buttonStyle(.plain)
-                                            .padding(2),
-                                            alignment: .topTrailing
-                                        )
-                                }
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.top, 8)
-                        }
-                    }
-                    
-                    // 输入区域
-                    HStack(alignment: .bottom, spacing: 8) {
-                        // 替换TextField为TextEditor
-                        TextEditor(text: $textInput)
-                            .frame(minHeight: 40, maxHeight: 120)
-                            .padding(8)
-                            .font(.system(size: 16)) // 设置字号为16
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color(.controlBackgroundColor))
-                                    .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color(.separatorColor).opacity(0.5), lineWidth: 1)
-                            )
-                            .focused($isInputFocused)
-                            .scrollContentBackground(.hidden)
-                            .onSubmit {
-                                if !isShiftKeyPressed() {
-                                    sendMessage()
-                                }
-                            }
-                            .onChange(of: textInput) { _ in
-                                DispatchQueue.main.async {
-                                    if textInput.last == "\n" && !isShiftKeyPressed() {
-                                        textInput.removeLast()
-                                        sendMessage()
-                                    }
-                                }
-                            }
-                        
-                        Button {
-                            sendMessage() // 改为直接调用sendMessage方法
-                        } label: {
-                            Image(systemName: "paperplane.fill")
-                                .padding(10)
-                                .background(
-                                    Circle()
-                                        .fill(Color.accentColor)
-                                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
-                                )
-                                .foregroundColor(.white)
-                        }
-                        .buttonStyle(.plain)
-                        .keyboardShortcut(.return, modifiers: [])
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.top, 8)
-                    .padding(.bottom, 12)
-                    .background(Color(.windowBackgroundColor))
-                    .onAppear {
-                        isInputFocused = true
-                    }
-                }
-                .background(Color(.windowBackgroundColor))
-                .background(
-                    Divider()
-                        .background(Color(.separatorColor))
-                        .frame(height: 1),
-                    alignment: .top
-                )
-            }
+            Divider()
+                .background(Color(.separatorColor))
+            
+            InputArea(viewModel: inputViewModel, sendMessage: sendMessage)
+            
+            BottomToolbar(viewModel: inputViewModel, sendMessage: sendMessage)
         }
-        .environment(\.llmProvider, currentProvider)
     }
 
     private func sendMessage() {
-        guard !textInput.isEmpty || !displayedImages.isEmpty else { return }
-        let currentText = textInput
-        let currentImages = displayedImages // 保存当前图片
-        textInput = ""
-        displayedImages = [] // 立即清空图片列表
-        Task { @MainActor in
-            do {
-                if currentImages.isEmpty {
-                    try await viewModel.sendText(currentText, using: llmProvider)
-                } else {
-                    try await viewModel.sendMessage(text: currentText,
-                                                   images: currentImages, // 使用保存的图片
-                                                   using: llmProvider)
-                }
-                isInputFocused = true
-            } catch {
-                // do nothing
-            }
-        }
-    }
-
-    private func isShiftKeyPressed() -> Bool {
-        #if os(macOS)
-        return NSEvent.modifierFlags.contains(.shift)
-        #else
-        return false
-        #endif
+        guard !inputViewModel.textInput.isEmpty || !inputViewModel.displayedImages.isEmpty else { return }
+        
+        let currentText = inputViewModel.textInput
+        let currentImages = inputViewModel.displayedImages
+        inputViewModel.clearInput()
     }
 }
 
@@ -241,12 +114,16 @@ struct ChatView_Previews: PreviewProvider {
         let viewModel = ChatViewModel()
         viewModel.messages = mockMessages
         
+        // 创建模拟的输入视图模型
+        let mockInputViewModel = InputMessageViewModel.mock()
+        
         return Group {
-                ChatView(viewModel: viewModel)
-                    .previewDisplayName("默认状态")
-                
-                ChatView(viewModel: viewModel, images: [redImage, blueImage, greenImage])
-                    .previewDisplayName("带图片预览")
+            ChatView(viewModel: viewModel)
+                .previewDisplayName("默认状态")
+            
+            ChatView(viewModel: viewModel, inputViewModel: mockInputViewModel)
+                .previewDisplayName("带模拟输入的状态")
+            
         }.frame(maxWidth: 400)
     }
 }

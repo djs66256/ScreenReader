@@ -42,7 +42,7 @@ public class StatusBarController: NSObject {
                 guard let imageData = image.tiffRepresentation else { return }
                 
                 // 在主线程打开窗口
-                DispatchQueue.main.async {
+                await MainActor.run {
                     NSApp.activate(ignoringOtherApps: true)
                     let chatWindow = NSWindow(
                         contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
@@ -53,8 +53,15 @@ public class StatusBarController: NSObject {
                     chatWindow.title = "截图分析"
                     chatWindow.center()
                     
-                    // 创建 ChatView 并传递图片数据
-                    let chatView = ChatView(images: [image])
+                    // 创建 ChatViewModel 和 InputMessageViewModel
+                    let chatViewModel = ChatViewModel()
+                    let inputViewModel = InputMessageViewModel()
+                    
+                    // 将截图添加到输入视图模型
+                    inputViewModel.addImage(image)
+                    
+                    // 创建 ChatView 并传递视图模型
+                    let chatView = ChatView(viewModel: chatViewModel, inputViewModel: inputViewModel)
                     
                     chatWindow.contentView = NSHostingView(rootView: chatView)
                     chatWindow.makeKeyAndOrderFront(nil)
