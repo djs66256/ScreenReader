@@ -8,7 +8,19 @@ struct BottomToolbar: View {
         HStack(alignment: .center, spacing: 8) {
             // 图片按钮
             Button(action: {
-                // TODO: 实现图片选择
+                let openPanel = NSOpenPanel()
+                openPanel.allowsMultipleSelection = true
+                openPanel.canChooseFiles = true
+                openPanel.canChooseDirectories = false
+                openPanel.allowedContentTypes = [.image]
+                
+                if openPanel.runModal() == .OK {
+                    for url in openPanel.urls {
+                        if let image = NSImage(contentsOf: url) {
+                            viewModel.addImage(image)
+                        }
+                    }
+                }
             }) {
                 Image(systemName: "photo")
                     .font(.system(size: 14))
