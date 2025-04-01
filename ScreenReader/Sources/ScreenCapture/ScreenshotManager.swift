@@ -5,19 +5,34 @@ import AVFoundation
 import CoreGraphics
 import os
 
+/// 截图管理器，负责处理交互式屏幕截图功能
+/// 主要功能包括：
+/// 1. 创建跨屏的选择区域窗口
+/// 2. 处理鼠标移动和键盘事件
+/// 3. 协调截图流程
 class ScreenshotManager: NSObject {
+    /// 单例实例
     static let shared = ScreenshotManager()
+    
+    /// 选择区域窗口
     private var selectionWindow: NSWindow?
+    /// 选择区域视图
     private var selectionView: ScreenshotSelectionView?
+    /// 事件监听器
     private var eventMonitor: Any?
+    /// 屏幕捕获实现
     private var screenCapture: ScreenCapture
+    /// 是否启用详细日志
     private var verboseLogging = false
 
     override init() {
+        // 默认使用AVFoundation实现的屏幕捕获
         screenCapture = AVScreenCapture()
         super.init()
     }
 
+    /// 异步执行交互式截图
+    /// - Returns: 截取的图像，如果取消则为nil
     func captureInteractive() async -> NSImage? {
         return await withCheckedContinuation { continuation in
             startInteractiveCapture { image in
@@ -26,8 +41,11 @@ class ScreenshotManager: NSObject {
         }
     }
 
+    /// 开始交互式截图流程
+    /// - Parameter completion: 截图完成后的回调
     func startInteractiveCapture(completion: @escaping (NSImage?) -> Void) {
         DispatchQueue.main.async {
+            // 设置鼠标为十字准星样式
             NSCursor.crosshair.push()
             NSCursor.current.set()
 
@@ -36,6 +54,7 @@ class ScreenshotManager: NSObject {
             if self.verboseLogging {
                 os_log("初始鼠标位置: (%.1f, %.1f)", log: .default, type: .debug, mouseLocation.x, mouseLocation.y)
             }
+            
             // 找到包含鼠标的屏幕
             let initialScreen = NSScreen.screens.first { screen in
                 NSMouseInRect(mouseLocation, screen.frame, false)
@@ -48,19 +67,21 @@ class ScreenshotManager: NSObject {
             // 在鼠标所在屏幕上创建选择窗口
             self.createSelectionWindow(on: initialScreen, completion: completion)
 
-            // 修改鼠标移动事件处理
             // 添加标志位跟踪是否已点击
             var hasClicked = false
 
+            // 监听鼠标移动、左键点击和键盘事件
             self.eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDown, .keyDown]) { [weak self] event in
                 guard let self = self else { return event }
                 
                 switch event.type {
                 case .mouseMoved where !hasClicked:
+                    // 处理鼠标移动事件
                     let mouseLocation = NSEvent.mouseLocation
                     if self.verboseLogging {
                         os_log("鼠标移动 - 位置: (%.1f, %.1f)", log: .default, type: .debug, mouseLocation.x, mouseLocation.y)
                     }
+                    // 检查是否切换到新屏幕
                     if let currentScreen = NSScreen.screens.first(where: { screen in
                         NSMouseInRect(mouseLocation, screen.frame, false)
                     }), currentScreen != self.selectionWindow?.screen {
@@ -68,19 +89,24 @@ class ScreenshotManager: NSObject {
                               currentScreen.localizedName, 
                               currentScreen.frame.width, 
                               currentScreen.frame.height)
+                        // 在新屏幕上创建选择窗口
                         self.createSelectionWindow(on: currentScreen, completion: completion)
                     }
                     
                 case .leftMouseDown:
+                    // 处理鼠标左键点击事件
                     if self.verboseLogging {
                         os_log("鼠标左键点击, 移除鼠标移动监听", log: .default, type: .debug)
                     }
                     hasClicked = true
+                    // 移除事件监听器
                     if let monitor = self.eventMonitor {
                         NSEvent.removeMonitor(monitor)
                         self.eventMonitor = nil
                     }
+                    
                 case .keyDown:
+                    // 处理键盘事件
                     if self.verboseLogging {
                         os_log("键盘事件: keyCode=%d", log: .default, type: .debug, event.keyCode)
                     }
@@ -89,6 +115,7 @@ class ScreenshotManager: NSObject {
                         if self.verboseLogging {
                             os_log("用户按下ESC键，取消截图", log: .default, type: .info)
                         }
+                        // 取消截图流程
                         DispatchQueue.main.async {
                             self.cleanup()
                             completion(nil)
@@ -105,6 +132,10 @@ class ScreenshotManager: NSObject {
         }
     }
 
+    /// 在选择屏幕上创建选择窗口
+    /// - Parameters:
+    ///   - screen: 目标屏幕
+    ///   - completion: 截图完成回调
     @MainActor private func createSelectionWindow(on screen: NSScreen?, completion: @escaping (NSImage?) -> Void) {
         // 如果窗口已存在，先移除
         selectionWindow?.orderOut(nil)
@@ -112,7 +143,7 @@ class ScreenshotManager: NSObject {
         // 使用指定屏幕的frame
         let windowFrame = screen?.frame ?? NSScreen.main?.frame ?? .zero
         
-        // 创建新窗口
+        // 创建无边框透明窗口
         selectionWindow = CustomBorderlessWindow(
             contentRect: windowFrame,
             styleMask: .borderless,
@@ -120,29 +151,32 @@ class ScreenshotManager: NSObject {
             defer: false
         )
         
-        selectionWindow?.level = .screenSaver
+        // 配置窗口属性
+        selectionWindow?.level = .screenSaver  // 设置窗口层级高于普通窗口
         selectionWindow?.isOpaque = false
         selectionWindow?.backgroundColor = NSColor.clear
         selectionWindow?.ignoresMouseEvents = false
         selectionWindow?.isReleasedWhenClosed = false
         selectionWindow?.acceptsMouseMovedEvents = true
 
+        // 创建选择区域视图
         selectionView = ScreenshotSelectionView(frame: windowFrame)
         selectionWindow?.contentView = selectionView
         
-        // 设置选择视图的回调
+        // 设置选择完成回调
         selectionView?.selectionHandler = { [weak self] rect in
             guard let self = self else { return }
             self.cleanup()
             
             if let screen = screen ?? NSScreen.main {
+                // 捕获选定区域的图像
                 self.screenCapture.captureSelectedArea(rect, in: screen) { image in
                     DispatchQueue.main.async {
                         completion(image)
                     }
                 }
             } else {
-                // 当无法获取任何屏幕时的处理逻辑
+                // 当无法获取屏幕时的错误处理
                 DispatchQueue.main.async {
                     completion(nil)
                 }
@@ -152,6 +186,7 @@ class ScreenshotManager: NSObject {
             }
         }
         
+        // 设置取消选择回调
         selectionView?.cancelHandler = { [weak self] in
             guard let self = self else { return }
             self.cleanup()
@@ -160,21 +195,24 @@ class ScreenshotManager: NSObject {
             }
         }
         
+        // 显示窗口并获取焦点
         selectionWindow?.makeKeyAndOrderFront(nil)
-        
-        // 确保窗口获得焦点
         NSApp.activate(ignoringOtherApps: true)
         selectionWindow?.makeFirstResponder(selectionView)
     }
     
+    /// 清理资源
     private func cleanup() {
+        // 移除事件监听器
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
             eventMonitor = nil
         }
+        // 关闭并清理窗口
         selectionWindow?.orderOut(nil)
         selectionWindow = nil
         selectionView = nil
+        // 恢复鼠标样式
         NSCursor.pop()
     }
 }
