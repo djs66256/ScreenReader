@@ -8,13 +8,19 @@ protocol LLMProvider {
 
 enum LLMProviderFactory {
     static func createProvider(config: ChatModeConfig) throws -> LLMProvider {
-        do {
-            if let provider = config.provider, provider.id.lowercased().contains("openai") {
-                return OpenAIProvider(config: config)
-            }
-            throw NSError(domain: "LLMProviderFactory", code: 400, userInfo: [NSLocalizedDescriptionKey: "Unsupported provider type"])
-        } catch {
+        guard let provider = config.provider else {
             return defaultProvider
+        }
+        
+        switch provider.id.lowercased() {
+        case let id where id.contains("openai"):
+            return OpenAIProvider(config: config)
+        case let id where id.contains("anthropic"):
+            return AnthropicProvider(config: config)
+        case let id where id.contains("ollama"):
+            return OllamaProvider(config: config)
+        default:
+            throw NSError(domain: "LLMProviderFactory", code: 400, userInfo: [NSLocalizedDescriptionKey: "Unsupported provider type"])
         }
     }
 
@@ -25,7 +31,7 @@ enum LLMProviderFactory {
             provider: LLMProviderConfig(
                 id: "ollama",
                 name: "Ollama",
-                defaultBaseURL: "http://ollama.qingke.ai/v1/chat/completions",
+                defaultBaseURL: "http://ollama.qingke.ai",
                 apiKey: "ollama",
                 supportedModelIDs: ["qwen2.5-coder:7b", "qwq:32b"]
             ),
