@@ -75,10 +75,13 @@ class ScreenshotManager: NSObject {
     }
 
     @MainActor private func createSelectionWindow() {
-        guard let screen = NSScreen.main else { return }
+        // 获取所有屏幕的总边界
+        let allScreensFrame = NSScreen.screens.reduce(NSRect.zero) { result, screen in
+            return result.union(screen.frame)
+        }
         
         selectionWindow = NSWindow(
-            contentRect: screen.frame,
+            contentRect: allScreensFrame,
             styleMask: .borderless,
             backing: .buffered,
             defer: false
@@ -91,7 +94,7 @@ class ScreenshotManager: NSObject {
         selectionWindow?.isReleasedWhenClosed = false
         selectionWindow?.acceptsMouseMovedEvents = true
 
-        selectionView = ScreenshotSelectionView(frame: screen.frame)
+        selectionView = ScreenshotSelectionView(frame: allScreensFrame)
         selectionWindow?.contentView = selectionView
         selectionWindow?.makeKeyAndOrderFront(nil)
         
@@ -109,13 +112,14 @@ class ScreenshotManager: NSObject {
     
     private func handleSelection(rect: CGRect, completion: @escaping (NSImage?) -> Void) {
         DispatchQueue.main.async {
-            self.selectionView?.selectionHandler = { [weak self] rect in
-                    guard let self = self else { return }
-                    self.cleanup()
-                    
-                    let captureRect = (rect.width > 0 && rect.height > 0) ? rect : NSScreen.main?.frame ?? .zero
-                    self.screenCapture.captureSelectedArea(captureRect, completion: completion)
-                }
+            self.cleanup()
+            
+            // 确保选择区域有效
+            let captureRect = (rect.width > 0 && rect.height > 0) ? rect : NSScreen.screens.reduce(NSRect.zero) { result, screen in
+                return result.union(screen.frame)
+            }
+            
+            self.screenCapture.captureSelectedArea(captureRect, completion: completion)
         }
     }
     

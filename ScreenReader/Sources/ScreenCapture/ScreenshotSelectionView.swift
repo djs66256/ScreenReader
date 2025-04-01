@@ -17,7 +17,7 @@ class ScreenshotSelectionView: NSView {
         // 绘制选择框
         if let rect = currentRect {
             // 创建挖孔效果
-            let backgroundPath = NSBezierPath(rect: dirtyRect)
+            let backgroundPath = NSBezierPath(rect: bounds)
             let selectionPath = NSBezierPath(rect: rect)
             backgroundPath.append(selectionPath)
             backgroundPath.windingRule = .evenOdd
@@ -30,10 +30,43 @@ class ScreenshotSelectionView: NSView {
             NSColor.white.setStroke()
             selectionPath.lineWidth = 2.0
             selectionPath.stroke()
+            
+            // 绘制尺寸信息
+            drawSizeInfo(for: rect)
         } else {
             NSColor.black.withAlphaComponent(0.3).setFill()
-            dirtyRect.fill()
+            bounds.fill()
         }
+    }
+    
+    // 添加尺寸信息显示
+    private func drawSizeInfo(for rect: NSRect) {
+        let sizeString = "\(Int(rect.width)) × \(Int(rect.height))"
+        let attributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: NSColor.white,
+            .backgroundColor: NSColor.black.withAlphaComponent(0.7),
+            .font: NSFont.systemFont(ofSize: 12)
+        ]
+        
+        let stringSize = sizeString.size(withAttributes: attributes)
+        var infoRect = NSRect(
+            x: rect.midX - stringSize.width / 2,
+            y: rect.maxY + 5,
+            width: stringSize.width + 10,
+            height: stringSize.height + 5
+        )
+        
+        // 确保信息框在视图范围内
+        if infoRect.maxY > bounds.maxY {
+            infoRect.origin.y = rect.minY - infoRect.height - 5
+        }
+        
+        // 绘制背景和文本
+        NSBezierPath(roundedRect: infoRect, xRadius: 3, yRadius: 3).fill()
+        sizeString.draw(
+            at: NSPoint(x: infoRect.midX - stringSize.width / 2, y: infoRect.midY - stringSize.height / 2),
+            withAttributes: attributes
+        )
     }
     
     private func handleKeyEvent(_ event: NSEvent) {
@@ -85,12 +118,28 @@ class ScreenshotSelectionView: NSView {
         guard let start = startPoint else { return }
         let currentPoint = convert(event.locationInWindow, from: nil)
         
+        // 计算选择区域，考虑多屏幕坐标
         let originX = min(start.x, currentPoint.x)
         let originY = min(start.y, currentPoint.y)
         let width = abs(currentPoint.x - start.x)
         let height = abs(currentPoint.y - start.y)
         
         currentRect = NSRect(x: originX, y: originY, width: width, height: height)
+        
+        // 确保选择区域在所有屏幕的总边界内
+        if let window = self.window {
+            let screenRect = NSScreen.screens.reduce(NSRect.zero) { result, screen in
+                return result.union(screen.frame)
+            }
+            let windowRect = window.convertToScreen(self.convert(currentRect!, to: nil))
+            
+            // 如果选择区域超出屏幕边界，进行调整
+            if !screenRect.contains(windowRect) {
+                let adjustedRect = windowRect.intersection(screenRect)
+                currentRect = self.convert(window.convertFromScreen(adjustedRect), from: nil)
+            }
+        }
+        
         needsDisplay = true
     }
     
