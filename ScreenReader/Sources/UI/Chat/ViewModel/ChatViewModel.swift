@@ -6,7 +6,8 @@ import Foundation
     @Published var isLoading = false
 
     // 私有方法处理公共发送逻辑
-    private func sendCommonLogic(contents: [ChatContent], using provider: LLMProvider) async throws {
+    private func sendCommonLogic(contents: [ChatContent], using config: ChatModeConfig) async throws {
+        let provider = try LLMProviderFactory.createProvider(config: config)
         let messages = await MainActor.run {
             let userMessage = ChatMessage(contents: contents, isUser: true)
             self.messages.append(userMessage)
@@ -34,13 +35,13 @@ import Foundation
     }
 
     // 发送纯文本消息(便捷方法)
-    func sendText(_ text: String, using provider: LLMProvider) async throws {
+    func sendText(_ text: String, using config: ChatModeConfig) async throws {
         guard !text.isEmpty else { return }
-        try await sendCommonLogic(contents: [.text(text)], using: provider)
+        try await sendCommonLogic(contents: [.text(text)], using: config)
     }
 
     // 发送文本消息
-    func sendMessage(text: String, images: [NSImage], using provider: LLMProvider) async throws {
+    func sendMessage(text: String, images: [NSImage], using config: ChatModeConfig) async throws {
         var contents: [ChatContent] = []
         
         for image in images {
@@ -53,13 +54,13 @@ import Foundation
             contents.append(.text(text))
         }
         
-        try await sendCommonLogic(contents: contents, using: provider)
+        try await sendCommonLogic(contents: contents, using: config)
     }
     
     // 发送图片消息(URL)
-    func sendImages(_ urls: [URL], using provider: LLMProvider) async throws {
+    func sendImages(_ urls: [URL], using config: ChatModeConfig) async throws {
         guard !urls.isEmpty else { return }
         let contents = urls.map { ChatContent.imageURL($0) }
-        try await sendCommonLogic(contents: contents, using: provider)
+        try await sendCommonLogic(contents: contents, using: config)
     }
 }

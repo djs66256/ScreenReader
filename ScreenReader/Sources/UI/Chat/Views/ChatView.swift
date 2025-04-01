@@ -1,5 +1,6 @@
 import SwiftUI
 import MarkdownUI
+import os
 #if canImport(UIKit)
 import UIKit
 #elseif canImport(AppKit)
@@ -59,6 +60,23 @@ struct ChatView: View {
         let currentText = inputViewModel.textInput
         let currentImages = inputViewModel.displayedImages
         inputViewModel.clearInput()
+        
+        guard let config = inputViewModel.selectedModel else {
+            NSAlert.showToast(message: "请先选择聊天模式")
+            return
+        }
+        
+        Task {
+            do {
+                if currentImages.isEmpty {
+                    try await chatViewModel.sendText(currentText, using: config)
+                } else {
+                    try await chatViewModel.sendMessage(text: currentText, images: currentImages, using: config)
+                }
+            } catch {
+                os_log("发送消息失败: %{public}@", type: .error, error.localizedDescription)
+            }
+        }
     }
 }
 
