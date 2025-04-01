@@ -9,10 +9,11 @@ struct InputArea: View {
             if !viewModel.displayedImages.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(0..<viewModel.displayedImages.count, id: \.self) { index in
-                            Image(nsImage: viewModel.displayedImages[index])
+                        ForEach(viewModel.displayedImages.indices, id: \.self) { index in
+                            let image = viewModel.displayedImages[index]
+                            Image(nsImage: image)
                                 .resizable()
-                                .aspectRatio(contentMode: .fill)
+                                .aspectRatio(contentMode: .fit)
                                 .frame(width: 60, height: 60)
                                 .cornerRadius(4)
                                 .overlay(
