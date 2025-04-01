@@ -59,9 +59,12 @@ class OpenAIProvider: LLMProvider {
         guard let modelName = modelName else {
             throw NSError(domain: "OpenAIProvider", code: 400, userInfo: [NSLocalizedDescriptionKey: "Model name is not configured"])
         }
-        guard let url = URL(string: baseURLString ?? "") else {
+        guard let baseURL = URL(string: baseURLString ?? "") else {
             throw NSError(domain: "OpenAIProvider", code: 400, userInfo: [NSLocalizedDescriptionKey: "API URL is not configured"])
         }
+        
+        // 补全Chat接口路径
+        let url = baseURL.appendingPathComponent("chat/completions")
         
         let headers = [
             "Authorization": "Bearer \(apiKey)",
