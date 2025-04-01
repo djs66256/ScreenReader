@@ -1,12 +1,42 @@
 [
     {
-        "id": "default-chat",
-        "name": "Default Chat",
+        "id": "developer-uikit-snapkit",
+        "name": "UIKit工程师",
         "description": "Standard chat mode",
         "icon": "bubble.left",
-        "provider": null,
-        "model": null,
-        "rules": []
+        "provider": {
+            "id": "openai",
+            "name": "OpenAI",
+            "defaultBaseURL": "https://api.openai.com/v1",
+            "apiKey": null,
+            "supportedModelIDs": [
+                "gpt-3.5-turbo",
+                "gpt-4",
+                "gpt-4-turbo"
+            ]
+        },
+        "model": {
+            "modelName": "gpt-4",
+            "systemPrompt": "You are a helpful assistant.",
+            "maxTokens": 2048,
+            "temperature": 0.7,
+            "topP": 1.0,
+            "presencePenalty": 0.0,
+            "frequencyPenalty": 0.0,
+            "stopWords": []
+        },
+        "rules": [
+            {
+                "id": "UIKit",
+                "name": "UIKit",
+                "systemPrompt": "使用UIKit编写代码"
+            },
+            {
+                "id": "snapkit",
+                "name": "snapkit",
+                "systemPrompt": "使用SnapKit布局视图"
+            }
+        ]
     },
     {
         "id": "creative-writing",
