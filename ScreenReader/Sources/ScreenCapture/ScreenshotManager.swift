@@ -113,7 +113,7 @@ class ScreenshotManager: NSObject {
         let windowFrame = screen?.frame ?? NSScreen.main?.frame ?? .zero
         
         // 创建新窗口
-        selectionWindow = NSWindow(
+        selectionWindow = CustomBorderlessWindow(
             contentRect: windowFrame,
             styleMask: .borderless,
             backing: .buffered,

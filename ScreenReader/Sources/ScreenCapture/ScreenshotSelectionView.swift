@@ -7,6 +7,20 @@ class ScreenshotSelectionView: NSView {
     private var startPoint: NSPoint?
     var currentRect: NSRect?
     
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+
+        window?.makeFirstResponder(self)
+        if let firstResponder = self.window?.firstResponder {
+            print("Current first responder: \(firstResponder)")
+        }
+        if let window = self.window, window.isKeyWindow {
+            print("This window is the key window.")
+        } else {
+            print("This window is NOT the key window.")
+        }
+    }
+    
     override var acceptsFirstResponder: Bool {
         return true
     }
@@ -123,13 +137,13 @@ class ScreenshotSelectionView: NSView {
     override func keyDown(with event: NSEvent) {
         switch event.keyCode {
         case 53: // ESC键
-            print("ESC pressed globally")
+//            print("ESC pressed globally")
             currentRect = nil
             cancelHandler?()
             needsDisplay = true
             
         case 36: // Enter键
-            print("Enter pressed globally")
+//            print("Enter pressed globally")
             if let rect = currentRect {
                 selectionHandler?(rect)
                 currentRect = nil
