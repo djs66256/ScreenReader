@@ -9,22 +9,17 @@ class AVScreenCapture: NSObject, ScreenCapture {
     private var output: AVCaptureVideoDataOutput?
     private var completion: ((NSImage?) -> Void)?
     
-    func captureSelectedArea(_ rect: CGRect, completion: @escaping (NSImage?) -> Void) {
+    func captureSelectedArea(_ rect: CGRect?, in screen: NSScreen, completion: @escaping (NSImage?) -> Void) {
         self.completion = completion
         
         let session = AVCaptureSession()
         session.sessionPreset = .high
         
-        // 获取包含指定区域的显示器
-        let displayID = getDisplayIDContainingRect(rect)
-        
-        /*
-         if let cgImage = CGWindowListCreateImage(rect, .optionOnScreenOnly, kCGNullWindowID, .bestResolution) {
-                     let nsImage = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
-                     completion(nsImage)
-                     return
-                 }
-         */
+        // 直接从传入的screen获取displayID
+        guard let displayID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID else {
+            completion(nil)
+            return
+        }
         
         // 设置屏幕输入
         guard let screenInput = AVCaptureScreenInput(displayID: displayID) else {
@@ -33,15 +28,16 @@ class AVScreenCapture: NSObject, ScreenCapture {
         }
         
         // 转换为显示器坐标系中的相对位置
-        let displayBounds = getDisplayBounds(displayID)
-        let relativeRect = CGRect(
-            x: rect.origin.x - displayBounds.origin.x,
-            y: rect.origin.y - displayBounds.origin.y,
-            width: rect.width,
-            height: rect.height
-        )
+//        let displayBounds = getDisplayBounds(displayID)
+//        let relativeRect = CGRect(
+//            x: rect.origin.x - displayBounds.origin.x,
+//            y: rect.origin.y - displayBounds.origin.y,
+//            width: rect.width,
+//            height: rect.height
+//        )
+        let cropRect = rect ?? CGDisplayBounds(displayID)
         
-        screenInput.cropRect = relativeRect
+        screenInput.cropRect = cropRect
         screenInput.scaleFactor = 1.0
         
         // 设置视频输出
@@ -66,53 +62,15 @@ class AVScreenCapture: NSObject, ScreenCapture {
         session.startRunning()
         
         // 设置超时
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.session?.stopRunning()
-            self?.completion?(self?.capturedImage)
-            self?.session = nil
-            self?.output = nil
-        }
+        // DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        //     self?.session?.stopRunning()
+        //     self?.completion?(self?.capturedImage)
+        //     self?.session = nil
+        //     self?.output = nil
+        // }
     }
     
     private var capturedImage: NSImage?
-    
-    // 获取包含指定区域的显示器ID
-    private func getDisplayIDContainingRect(_ rect: CGRect) -> CGDirectDisplayID {
-        var displayCount: UInt32 = 0
-        var result = CGGetActiveDisplayList(0, nil, &displayCount)
-        
-        if result != CGError.success {
-            return CGMainDisplayID()
-        }
-        
-        let allocated = Int(displayCount)
-        let activeDisplays = UnsafeMutablePointer<CGDirectDisplayID>.allocate(capacity: allocated)
-        result = CGGetActiveDisplayList(displayCount, activeDisplays, &displayCount)
-        
-        if result != CGError.success {
-            activeDisplays.deallocate()
-            return CGMainDisplayID()
-        }
-        
-        // 查找包含指定区域的显示器
-        for i in 0..<Int(displayCount) {
-            let displayID = activeDisplays[i]
-            let displayBounds = getDisplayBounds(displayID)
-            print("display => \(displayID): \(displayBounds)")
-//            if displayBounds.contains(rect.origin) {
-//                activeDisplays.deallocate()
-//                return displayID
-//            }
-        }
-        
-        activeDisplays.deallocate()
-        return CGMainDisplayID() // 如果没找到，返回主显示器
-    }
-    
-    // 获取显示器的边界
-    private func getDisplayBounds(_ displayID: CGDirectDisplayID) -> CGRect {
-        return CGDisplayBounds(displayID)
-    }
 }
 
 extension AVScreenCapture: AVCaptureVideoDataOutputSampleBufferDelegate {
@@ -128,6 +86,10 @@ extension AVScreenCapture: AVCaptureVideoDataOutputSampleBufferDelegate {
         if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
             let nsImage = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
             self.capturedImage = nsImage
+            self.completion?(nsImage)  // 立即返回图片
+            self.session?.stopRunning()  // 停止会话
+            self.session = nil
+            self.output = nil
         }
     }
 }

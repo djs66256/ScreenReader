@@ -5,6 +5,10 @@ import AVFoundation
 import CoreGraphics
 
 class SCStreamScreenCapture: NSObject, ScreenCapture, SCStreamOutput {
+    func captureSelectedArea(_ rect: CGRect?, in screen: NSScreen, completion: @escaping (NSImage?) -> Void) {
+        
+    }
+    
     private let imageLock = NSLock()
     private var _capturedImage: NSImage?
     private var capturedImage: NSImage? {

@@ -69,29 +69,6 @@ class ScreenshotSelectionView: NSView {
         )
     }
     
-    private func handleKeyEvent(_ event: NSEvent) {
-        print("Global key pressed: \(event.keyCode)")
-        
-        switch event.keyCode {
-        case 53: // ESC键
-            print("ESC pressed globally")
-            currentRect = nil
-            cancelHandler?()
-            needsDisplay = true
-            
-        case 36: // Enter键
-            print("Enter pressed globally")
-            if let rect = currentRect {
-                selectionHandler?(rect)
-                currentRect = nil
-                needsDisplay = true
-            }
-            
-        default:
-            break
-        }
-    }
-    
     override func mouseDown(with event: NSEvent) {
         if event.clickCount == 2 && currentRect != nil {
             // 双击确认选择
@@ -141,6 +118,27 @@ class ScreenshotSelectionView: NSView {
         }
         
         needsDisplay = true
+    }
+    
+    override func keyDown(with event: NSEvent) {
+        switch event.keyCode {
+        case 53: // ESC键
+            print("ESC pressed globally")
+            currentRect = nil
+            cancelHandler?()
+            needsDisplay = true
+            
+        case 36: // Enter键
+            print("Enter pressed globally")
+            if let rect = currentRect {
+                selectionHandler?(rect)
+                currentRect = nil
+                needsDisplay = true
+            }
+            
+        default:
+            break
+        }
     }
     
 }
