@@ -2,6 +2,8 @@ import Foundation
 
 actor LLMModelConfigActorRepository: LLMModelConfigRepository {
     private let storageFileURL: URL
+    private var cachedConfigs: [LLMModelConfig]? // 新增内存缓存
+    private let defaultTemplatesURL = StoragePath.Models.templates // 新增默认配置路径
     
     init() {
         let modelsDirectory = StoragePath.configsDirectory
@@ -11,7 +13,32 @@ actor LLMModelConfigActorRepository: LLMModelConfigRepository {
     }
     
     func getAllConfigs() async -> [LLMModelConfig] {
-        guard let data = try? Data(contentsOf: storageFileURL) else { return [] }
+        if let cached = cachedConfigs, !cached.isEmpty {
+            return cached
+        }
+        
+        // 加载用户保存的配置
+        let savedConfigs: [LLMModelConfig]
+        if let data = try? Data(contentsOf: storageFileURL) {
+            savedConfigs = (try? JSONDecoder().decode([LLMModelConfig].self, from: data)) ?? []
+        } else {
+            savedConfigs = []
+        }
+        
+        // 如果用户配置为空，则直接返回默认配置
+        if savedConfigs.isEmpty {
+            let defaultConfigs = loadDefaultConfigs() ?? []
+            cachedConfigs = defaultConfigs
+            return defaultConfigs
+        }
+        
+        // 否则缓存并返回用户配置
+        cachedConfigs = savedConfigs
+        return savedConfigs
+    }
+    
+    private func loadDefaultConfigs() -> [LLMModelConfig]? {
+        guard let data = try? Data(contentsOf: defaultTemplatesURL) else { return nil }
         return (try? JSONDecoder().decode([LLMModelConfig].self, from: data)) ?? []
     }
     
@@ -44,5 +71,6 @@ actor LLMModelConfigActorRepository: LLMModelConfigRepository {
     private func saveConfigs(_ configs: [LLMModelConfig]) {
         let data = try? JSONEncoder().encode(configs)
         try? data?.write(to: storageFileURL)
+        cachedConfigs = configs // 更新缓存
     }
 }

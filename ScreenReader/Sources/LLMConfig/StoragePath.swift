@@ -11,7 +11,7 @@ enum StoragePath {
     
     public static let templatesBaseDirectory: URL = {
         Bundle.main.bundleURL
-            .appendingPathComponent("Contents/Resources/Templates")
+            .appendingPathComponent("Contents/Resources")
     }()
     
     // MARK: - 配置目录
@@ -46,6 +46,9 @@ enum StoragePath {
     }
     
     enum Rules {
+        static let templates = templatesBaseDirectory
+            .appendingPathComponent("RuleTemplates.json")
+        
         static func configFile(id: String) -> URL {
             configsDirectory
                 .appendingPathComponent("Rules")
@@ -54,6 +57,9 @@ enum StoragePath {
     }
     
     enum ChatModes {
+        static let templates = templatesBaseDirectory
+            .appendingPathComponent("ChatModeTemplates.json")
+        
         static func configFile(id: String) -> URL {
             configsDirectory
                 .appendingPathComponent("ChatModes")

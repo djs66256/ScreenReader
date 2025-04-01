@@ -1,15 +1,5 @@
 import Foundation
 
-struct LLMProviderConfigTemplate: Codable {
-    var id: String
-    var name: String
-    var defaultBaseURL: String?
-}
-
-protocol LLMProviderConfigTemplateRepository {
-    func getAllConfigTemplates() async -> [LLMProviderConfigTemplate]
-}
-
 struct LLMProviderConfig: Codable, Equatable, Identifiable, Hashable {
     var id: String
     var name: String
@@ -23,14 +13,6 @@ struct LLMProviderConfig: Codable, Equatable, Identifiable, Hashable {
         self.defaultBaseURL = defaultBaseURL
         self.apiKey = apiKey
         self.supportedModelIDs = supportedModelIDs
-    }
-
-    init(template: LLMProviderConfigTemplate, apiKey: String?) {
-        self.id = template.id
-        self.name = template.name
-        self.defaultBaseURL = template.defaultBaseURL
-        self.apiKey = apiKey
-        self.supportedModelIDs = []
     }
 }
 

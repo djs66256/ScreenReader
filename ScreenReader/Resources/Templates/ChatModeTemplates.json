@@ -1,0 +1,29 @@
+[
+    {
+        "id": "default-chat",
+        "name": "Default Chat",
+        "description": "Standard chat mode",
+        "icon": "bubble.left",
+        "provider": null,
+        "model": null,
+        "rules": []
+    },
+    {
+        "id": "creative-writing",
+        "name": "Creative Writing",
+        "description": "Mode optimized for creative writing",
+        "icon": "pencil.tip",
+        "provider": null,
+        "model": null,
+        "rules": []
+    },
+    {
+        "id": "technical-support",
+        "name": "Technical Support",
+        "description": "Mode for technical assistance",
+        "icon": "wrench.and.screwdriver",
+        "provider": null,
+        "model": null,
+        "rules": []
+    }
+]

@@ -2,11 +2,22 @@
     {
         "id": "openai",
         "name": "OpenAI",
-        "defaultBaseURL": "https://api.openai.com/v1"
+        "defaultBaseURL": "https://api.openai.com/v1",
+        "apiKey": null,
+        "supportedModelIDs": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"]
     },
     {
         "id": "anthropic",
         "name": "Anthropic",
-        "defaultBaseURL": "https://api.anthropic.com"
+        "defaultBaseURL": "https://api.anthropic.com",
+        "apiKey": null,
+        "supportedModelIDs": ["claude-2", "claude-3-opus", "claude-3-sonnet"]
+    },
+    {
+        "id": "ollama",
+        "name": "Ollama",
+        "defaultBaseURL": "http://localhost:11434",
+        "apiKey": null,
+        "supportedModelIDs": ["llama2", "mistral", "gemma"]
     }
 ]

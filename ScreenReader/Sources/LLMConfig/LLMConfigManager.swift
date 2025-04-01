@@ -9,9 +9,6 @@ final class LLMConfigManager {
     let ruleConfigRepository: any LLMRuleConfigRepository
     let chatModeConfigRepository: any ChatModeConfigRepository
     
-    // 模板repository
-    let providerTemplateRepository: any LLMProviderConfigTemplateRepository
-    let modelTemplateRepository: any LLMModelConfigTemplateRepository
     
     private init() {
         // 初始化基础repository
@@ -24,8 +21,5 @@ final class LLMConfigManager {
             providerRepository: providerConfigRepository,
             ruleRepository: ruleConfigRepository
         )
-        
-        providerTemplateRepository = LLMProviderConfigTemplateActorRepository()
-        modelTemplateRepository = LLMModelConfigTemplateActorRepository()
     }
 }

@@ -4,7 +4,9 @@ actor ChatModeConfigActorRepository: ChatModeConfigRepository {
     private let storageFileURL: URL
     private let providerRepository: any LLMProviderConfigRepository
     private let ruleRepository: any LLMRuleConfigRepository
-    private var observers: [NSObjectProtocol] = []  // 新增：存储观察者引用
+    private var observers: [NSObjectProtocol] = []
+    private var cachedModes: [ChatModeConfig]?
+    private let defaultTemplatesURL = StoragePath.ChatModes.templates // 新增模板路径
 
     init(
         providerRepository: any LLMProviderConfigRepository = LLMProviderConfigActorRepository(),
@@ -52,37 +54,32 @@ actor ChatModeConfigActorRepository: ChatModeConfigRepository {
     }
 
     func getAllChatModes() async -> [ChatModeConfig] {
-        guard let data = try? Data(contentsOf: storageFileURL) else { return [] }
-        var modes = (try? JSONDecoder().decode([ChatModeConfig].self, from: data)) ?? []
-
-        // Check and update providers
-        for i in modes.indices {
-            if let providerId = modes[i].provider?.id {
-                if await providerRepository.getConfig(id: providerId) == nil {
-                    modes[i].provider = nil
-                    modes[i].model = nil
-                }
-            }
-
-            // Async rule filtering
-            modes[i].rules = await withTaskGroup(of: LLMRuleConfig?.self) { group in
-                for rule in modes[i].rules {
-                    group.addTask {
-                        await self.ruleRepository.getRule(id: rule.id) != nil ? rule : nil
-                    }
-                }
-
-                var validRules: [LLMRuleConfig] = []
-                for await rule in group {
-                    if let rule = rule {
-                        validRules.append(rule)
-                    }
-                }
-                return validRules
-            }
+        if let cached = cachedModes, !cached.isEmpty {
+            return cached
         }
-
-        return modes
+        
+        // 加载用户保存的配置
+        let savedModes: [ChatModeConfig]
+        if let data = try? Data(contentsOf: storageFileURL) {
+            savedModes = (try? JSONDecoder().decode([ChatModeConfig].self, from: data)) ?? []
+        } else {
+            savedModes = []
+        }
+        
+        // 如果用户配置为空，则加载默认模板
+        if savedModes.isEmpty {
+            let defaultModes = loadDefaultTemplates() ?? []
+            cachedModes = defaultModes
+            return defaultModes
+        }
+        
+        cachedModes = savedModes
+        return savedModes
+    }
+    
+    private func loadDefaultTemplates() -> [ChatModeConfig]? {
+        guard let data = try? Data(contentsOf: defaultTemplatesURL) else { return nil }
+        return (try? JSONDecoder().decode([ChatModeConfig].self, from: data)) ?? []
     }
 
     private func handleRuleChange() async {
@@ -165,6 +162,7 @@ actor ChatModeConfigActorRepository: ChatModeConfigRepository {
     private func saveModes(_ modes: [ChatModeConfig]) {
         let data = try? JSONEncoder().encode(modes)
         try? data?.write(to: storageFileURL)
+        cachedModes = modes
         NotificationCenter.default.post(name: .chatModeConfigChanged, object: nil)
     }
 }

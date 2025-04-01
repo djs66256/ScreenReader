@@ -1,20 +1,5 @@
 import Foundation
 
-struct LLMModelConfigTemplate: Codable {
-    var modelName: String
-    var systemPrompt: String?
-    var maxTokens: Int
-    var temperature: Double
-    var topP: Double
-    var presencePenalty: Double
-    var frequencyPenalty: Double
-    var stopWords: [String]
-}
-
-protocol LLMModelConfigTemplateRepository {
-    func getAllModelTemplates() async -> [LLMModelConfigTemplate]
-}
-
 struct LLMModelConfig: Codable, Equatable, Hashable {
     var modelName: String
     var systemPrompt: String?

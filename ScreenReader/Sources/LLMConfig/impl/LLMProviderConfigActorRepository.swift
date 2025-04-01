@@ -2,6 +2,8 @@ import Foundation
 
 actor LLMProviderConfigActorRepository: LLMProviderConfigRepository {
     private let storageFileURL: URL
+    private var cachedConfigs: [LLMProviderConfig]?
+    private let defaultTemplatesURL = StoragePath.Providers.templates // 新增基础配置路径
     
     init() {
         let providersDirectory = StoragePath.configsDirectory
@@ -11,7 +13,32 @@ actor LLMProviderConfigActorRepository: LLMProviderConfigRepository {
     }
     
     func getAllConfigs() async -> [LLMProviderConfig] {
-        guard let data = try? Data(contentsOf: storageFileURL) else { return [] }
+        if let cached = cachedConfigs, !cached.isEmpty {
+            return cached
+        }
+        
+        // 加载用户保存的配置
+        let savedConfigs: [LLMProviderConfig]
+        if let data = try? Data(contentsOf: storageFileURL) {
+            savedConfigs = (try? JSONDecoder().decode([LLMProviderConfig].self, from: data)) ?? []
+        } else {
+            savedConfigs = []
+        }
+        
+        // 如果用户配置为空，则直接返回默认配置
+        if savedConfigs.isEmpty {
+            let defaultConfigs = loadDefaultConfigs() ?? []
+            cachedConfigs = defaultConfigs
+            return defaultConfigs
+        }
+        
+        // 否则缓存并返回用户配置
+        cachedConfigs = savedConfigs
+        return savedConfigs
+    }
+
+    private func loadDefaultConfigs() -> [LLMProviderConfig]? {
+        guard let data = try? Data(contentsOf: defaultTemplatesURL) else { return nil }
         return (try? JSONDecoder().decode([LLMProviderConfig].self, from: data)) ?? []
     }
     
@@ -44,6 +71,7 @@ actor LLMProviderConfigActorRepository: LLMProviderConfigRepository {
     private func saveConfigs(_ configs: [LLMProviderConfig]) {
         let data = try? JSONEncoder().encode(configs)
         try? data?.write(to: storageFileURL)
+        cachedConfigs = configs // 更新缓存
         NotificationCenter.default.post(name: .llmProviderConfigChanged, object: nil)
     }
 }
