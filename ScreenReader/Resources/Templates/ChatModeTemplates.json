@@ -6,6 +6,7 @@
         "icon": "bubble.left",
         "provider": {
             "id": "openai",
+            "type": "openai",
             "name": "OpenAI",
             "defaultBaseURL": "https://api.openai.com/v1",
             "apiKey": null,

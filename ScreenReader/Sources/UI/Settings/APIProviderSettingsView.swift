@@ -16,6 +16,7 @@ struct APIProviderSettingsView: View {
     @State private var providers: [LLMProviderConfig] = []
     @State private var selection: LLMProviderConfig?
     @State private var observer: Any?
+    @State private var showTypeSelection: Bool = false
     
     var body: some View {
         SidebarSettingsView(
@@ -53,6 +54,15 @@ struct APIProviderSettingsView: View {
                 NotificationCenter.default.removeObserver(observer)
             }
         }
+        .sheet(isPresented: $showTypeSelection) {
+            TypeSelectionView(
+                onSelect: { template in
+                    createProvider(from: template)
+                    showTypeSelection = false
+                },
+                onCancel: { showTypeSelection = false }
+            )
+        }
     }
     
     private func setupObserver() {
@@ -79,18 +89,15 @@ struct APIProviderSettingsView: View {
     }
     
     private func addNewProvider() {
-        let newProvider = LLMProviderConfig(
-            id: UUID().uuidString,
-            name: "新提供商",
-            defaultBaseURL: nil,
-            apiKey: nil,
-            supportedModelIDs: []
-        )
-        
+        showTypeSelection = true
+    }
+    
+    private func createProvider(from template: LLMProviderConfig) {
         Task {
-            let createdProvider = await repository.createConfig(config: newProvider)
+            var templateCopy = template
+            templateCopy.id = UUID().uuidString
+            let createdProvider = await repository.createConfig(config: templateCopy)
             DispatchQueue.main.async {
-                self.providers.append(createdProvider)
                 self.selection = createdProvider
             }
         }
@@ -172,6 +179,7 @@ struct APIProviderSettingsView_Previews: PreviewProvider {
             ProviderDetailView(
                 provider: LLMProviderConfig(
                     id: "preview-provider",
+                    type: "openai",
                     name: "预览提供商",
                     defaultBaseURL: "https://api.example.com",
                     apiKey: "sk-1234567890",
@@ -186,7 +194,24 @@ struct APIProviderSettingsView_Previews: PreviewProvider {
 
 class MockLLMProviderConfigRepository: LLMProviderConfigRepository {
     func getAllTemplates() async -> [LLMProviderConfig] {
-        []
+        return [
+            LLMProviderConfig(
+                id: "template-openai",
+                type: "openai",
+                name: "OpenAI",
+                defaultBaseURL: "https://api.openai.com",
+                apiKey: nil,
+                supportedModelIDs: ["gpt-4", "gpt-3.5-turbo"]
+            ),
+            LLMProviderConfig(
+                id: "template-anthropic",
+                type: "anthropic",
+                name: "Anthropic",
+                defaultBaseURL: "https://api.anthropic.com",
+                apiKey: nil,
+                supportedModelIDs: ["claude-2", "claude-instant"]
+            )
+        ]
     }
 
     private var providers: [LLMProviderConfig]
@@ -195,6 +220,7 @@ class MockLLMProviderConfigRepository: LLMProviderConfigRepository {
         self.providers = [
             LLMProviderConfig(
                 id: "default-provider-1",
+                type: "openai",
                 name: "OpenAI",
                 defaultBaseURL: "https://api.openai.com",
                 apiKey: nil,
@@ -202,6 +228,7 @@ class MockLLMProviderConfigRepository: LLMProviderConfigRepository {
             ),
             LLMProviderConfig(
                 id: "default-provider-2",
+                type: "anthropic",
                 name: "Anthropic",
                 defaultBaseURL: "https://api.anthropic.com",
                 apiKey: nil,
@@ -234,5 +261,62 @@ class MockLLMProviderConfigRepository: LLMProviderConfigRepository {
     
     func deleteConfig(id: String) async {
         providers.removeAll { $0.id == id }
+    }
+}
+
+
+struct TypeSelectionView: View {
+    @Environment(\.llmProviderConfigRepository) private var repository
+    @State private var templates: [LLMProviderConfig] = []
+    let onSelect: (LLMProviderConfig) -> Void
+    let onCancel: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Text("选择提供商类型")
+                .font(.headline)
+                .padding(.top, 20)
+                .padding(.bottom, 10)
+            
+            Divider()
+            
+            List {
+                ForEach(templates, id: \.id) { template in
+                    Button(action: { onSelect(template) }) {
+                        HStack {
+                            Image(systemName: "server.rack")
+                                .foregroundColor(.primary)  // 修改为与外部一致的颜色
+                            Text(template.name)
+                                .foregroundColor(.primary)
+                            Spacer()
+                        }
+                        .padding(.vertical, 8)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .listStyle(.plain)
+            
+            Divider()
+            
+            Button("取消", action: onCancel)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(Color(.controlBackgroundColor))
+        }
+        .frame(width: 300, height: 400)
+        .onAppear {
+            loadTemplates()
+        }
+    }
+    
+    private func loadTemplates() {
+        Task {
+            let loadedTemplates = await repository.getAllTemplates()
+            DispatchQueue.main.async {
+                self.templates = loadedTemplates
+            }
+        }
     }
 }

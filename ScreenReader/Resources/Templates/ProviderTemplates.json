@@ -1,6 +1,7 @@
 [
     {
         "id": "openai",
+        "type": "openai",
         "name": "OpenAI",
         "defaultBaseURL": "https://api.openai.com/v1",
         "apiKey": null,
@@ -8,6 +9,7 @@
     },
     {
         "id": "anthropic",
+        "type": "anthropic", 
         "name": "Anthropic",
         "defaultBaseURL": "https://api.anthropic.com",
         "apiKey": null,
@@ -15,6 +17,7 @@
     },
     {
         "id": "ollama",
+        "type": "ollama",
         "name": "Ollama",
         "defaultBaseURL": "http://localhost:11434",
         "apiKey": null,
@@ -22,6 +25,7 @@
     },
     {
         "id": "openai-compatible",
+        "type": "openai-compatible",
         "name": "OpenAI-Compatible",
         "defaultBaseURL": "https://your-api-endpoint.com/v1",
         "apiKey": null,

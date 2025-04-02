@@ -6,34 +6,37 @@ protocol LLMProvider {
     
 }
 
+enum LLMProviderType: String, Codable {
+    case openai = "openai"
+    case anthropic = "anthropic"
+    case ollama = "ollama"
+    case openaiCompatible = "openai-compatible"
+}
+
 enum LLMProviderFactory {
     static func createProvider(config: ChatModeConfig) throws -> LLMProvider {
         guard let provider = config.provider else {
             return defaultProvider
         }
         
-        switch provider.id.lowercased() {
-        case let id where id.contains("openai"):
-            return OpenAIProvider(config: config)
-        case let id where id.contains("anthropic"):
-            return AnthropicProvider(config: config)
-        case let id where id.contains("ollama"):
-            return OllamaProvider(config: config)
-        case let id where id.contains("openai-compatible"):  // 新增兼容类型判断
-            return OpenAICompatibleProvider(config: config)
-        default:
+        guard let type = LLMProviderType(rawValue: provider.type.lowercased()) else {
             throw NSError(domain: "LLMProviderFactory", code: 400, userInfo: [NSLocalizedDescriptionKey: "Unsupported provider type"])
+        }
+        
+        switch type {
+        case .openai:
+            return OpenAIProvider(config: config)
+        case .anthropic:
+            return AnthropicProvider(config: config)
+        case .ollama:
+            return OllamaProvider(config: config)
+        case .openaiCompatible:
+            return OpenAICompatibleProvider(config: config)
         }
     }
     
-    /// 获取所有支持的提供者类型ID
-    static var allSupportedProviderIDs: [String] {
-        return [
-            "openai",
-            "anthropic", 
-            "ollama",
-            "openai-compatible"
-        ]
+    static var allSupportedProviderTypes: [LLMProviderType] {
+        return [.openai, .anthropic, .ollama, .openaiCompatible]
     }
 
     static var defaultProvider: LLMProvider {
@@ -42,8 +45,9 @@ enum LLMProviderFactory {
             name: "Default",
             provider: LLMProviderConfig(
                 id: "ollama",
+                type: "ollama",
                 name: "Ollama",
-                defaultBaseURL: "http://ollama.qingke.ai",
+                defaultBaseURL: "http://localhost:11434",
                 apiKey: "ollama",
                 supportedModelIDs: ["qwen2.5-coder:7b", "qwq:32b"]
             ),
@@ -62,4 +66,5 @@ enum LLMProviderFactory {
         return OpenAIProvider(config: defaultConfig)
     }
 }
+
 
