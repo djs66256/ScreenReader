@@ -111,7 +111,26 @@ struct ProviderDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                // 提供商名称
+                // 提供商类型 (不可编辑样式)
+                Text("提供商类型")
+                    .font(.title3)
+                    .foregroundColor(.secondary)
+                HStack {
+                    Text(provider.type)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Image(systemName: "lock.fill")
+                        .foregroundColor(.gray)
+                }
+                .padding(10)
+                .background(Color(.controlBackgroundColor).opacity(0.5))
+                .cornerRadius(6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                )
+                
+                // 提供商名称 (可编辑字段)
                 Text("提供商名称")
                     .font(.title3)
                     .foregroundColor(.secondary)
@@ -166,6 +185,62 @@ struct ProviderDetailView: View {
                 }
             }
             .padding()
+        }
+    }
+}
+
+struct TypeSelectionView: View {
+    @Environment(\.llmProviderConfigRepository) private var repository
+    @State private var templates: [LLMProviderConfig] = []
+    let onSelect: (LLMProviderConfig) -> Void
+    let onCancel: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Text("选择提供商类型")
+                .font(.headline)
+                .padding(.top, 20)
+                .padding(.bottom, 10)
+            
+            Divider()
+            
+            List {
+                ForEach(templates, id: \.id) { template in
+                    Button(action: { onSelect(template) }) {
+                        HStack {
+                            Image(systemName: "server.rack")
+                                .foregroundColor(.primary)  // 修改为与外部一致的颜色
+                            Text(template.name)
+                                .foregroundColor(.primary)
+                            Spacer()
+                        }
+                        .padding(.vertical, 8)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .listStyle(.plain)
+            
+            Divider()
+            
+            Button("取消", action: onCancel)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(Color(.controlBackgroundColor))
+        }
+        .frame(width: 300, height: 400)
+        .onAppear {
+            loadTemplates()
+        }
+    }
+    
+    private func loadTemplates() {
+        Task {
+            let loadedTemplates = await repository.getAllTemplates()
+            DispatchQueue.main.async {
+                self.templates = loadedTemplates
+            }
         }
     }
 }
@@ -264,59 +339,3 @@ class MockLLMProviderConfigRepository: LLMProviderConfigRepository {
     }
 }
 
-
-struct TypeSelectionView: View {
-    @Environment(\.llmProviderConfigRepository) private var repository
-    @State private var templates: [LLMProviderConfig] = []
-    let onSelect: (LLMProviderConfig) -> Void
-    let onCancel: () -> Void
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            Text("选择提供商类型")
-                .font(.headline)
-                .padding(.top, 20)
-                .padding(.bottom, 10)
-            
-            Divider()
-            
-            List {
-                ForEach(templates, id: \.id) { template in
-                    Button(action: { onSelect(template) }) {
-                        HStack {
-                            Image(systemName: "server.rack")
-                                .foregroundColor(.primary)  // 修改为与外部一致的颜色
-                            Text(template.name)
-                                .foregroundColor(.primary)
-                            Spacer()
-                        }
-                        .padding(.vertical, 8)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .listStyle(.plain)
-            
-            Divider()
-            
-            Button("取消", action: onCancel)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(Color(.controlBackgroundColor))
-        }
-        .frame(width: 300, height: 400)
-        .onAppear {
-            loadTemplates()
-        }
-    }
-    
-    private func loadTemplates() {
-        Task {
-            let loadedTemplates = await repository.getAllTemplates()
-            DispatchQueue.main.async {
-                self.templates = loadedTemplates
-            }
-        }
-    }
-}
