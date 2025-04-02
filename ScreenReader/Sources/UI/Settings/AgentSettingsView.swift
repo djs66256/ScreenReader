@@ -104,6 +104,7 @@ struct AgentDetailView: View {
     @Environment(\.ruleConfigRepository) private var ruleRepository
     @State private var providers: [LLMProviderConfig] = []
     @State private var allRules: [LLMRuleConfig] = []
+    @State private var isRulesExpanded: Bool = false
 
     var body: some View {
         ScrollView {
@@ -165,32 +166,70 @@ struct AgentDetailView: View {
                 .background(Color(.controlBackgroundColor))
                 .cornerRadius(6)
 
-                // 规则列表
-                Text("关联规则")
+                // 添加系统提示词输入
+                Text("系统提示词")
                     .font(.title3)
                     .foregroundColor(.secondary)
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(allRules, id: \.id) { rule in
-                        HStack {
-                            Toggle(isOn: Binding(
-                                get: { agentConfig.rules.contains(where: { $0.id == rule.id }) },
-                                set: { isSelected in
-                                    if isSelected {
-                                        agentConfig.rules.append(rule)
-                                    } else {
-                                        agentConfig.rules.removeAll { $0.id == rule.id }
-                                    }
-                                }
-                            )) {
-                                Text(rule.name)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            .toggleStyle(.switch)
+                TextEditor(text: Binding(
+                    get: { agentConfig.model?.systemPrompt ?? "" },
+                    set: {
+                        if agentConfig.model == nil {
+                            agentConfig.model = LLMModelConfig(
+                                modelName: "",
+                                systemPrompt: $0,
+                                maxTokens: 2048,
+                                temperature: 0.7,
+                                topP: 1.0,
+                                presencePenalty: 0.0,
+                                frequencyPenalty: 0.0,
+                                stopWords: []
+                            )
+                        } else {
+                            agentConfig.model?.systemPrompt = $0
                         }
-                        .padding(.vertical, 4)
+                    }
+                ))
+                .frame(minHeight: 80)
+                .padding(10)
+                .background(Color(.controlBackgroundColor))
+                .cornerRadius(6)
+                .scrollIndicators(.never)
+
+                // 规则列表
+                DisclosureGroup(isExpanded: $isRulesExpanded) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(allRules, id: \.id) { rule in
+                            HStack {
+                                Toggle(isOn: Binding(
+                                    get: { agentConfig.rules.contains(where: { $0.id == rule.id }) },
+                                    set: { isSelected in
+                                        if isSelected {
+                                            agentConfig.rules.append(rule)
+                                        } else {
+                                            agentConfig.rules.removeAll { $0.id == rule.id }
+                                        }
+                                    }
+                                )) {
+                                    Text(rule.name)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .toggleStyle(.switch)
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                    .padding(.vertical, 8)
+                } label: {
+                    Text("关联规则 (\(agentConfig.rules.count)/\(allRules.count))")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    withAnimation {
+                        isRulesExpanded.toggle()
                     }
                 }
-                .padding(.vertical, 8)
                 .onAppear {
                     Task {
                         let loadedRules = await ruleRepository.getAllRules()
