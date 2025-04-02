@@ -1,21 +1,21 @@
 import Foundation
 
-actor ChatModeConfigActorRepository: ChatModeConfigRepository {
+actor AgentConfigActorRepository: AgentConfigRepository {
     private let storageFileURL: URL
     private let providerRepository: any LLMProviderConfigRepository
     private let ruleRepository: any LLMRuleConfigRepository
     private var observers: [NSObjectProtocol] = []
-    private var cachedModes: [ChatModeConfig]?
-    private let defaultTemplatesURL = StoragePath.ChatModes.templates // 新增模板路径
+    private var cachedAgents: [AgentConfig]?
+    private let defaultTemplatesURL = StoragePath.Agents.templates // 更新模板路径
 
     init(
         providerRepository: any LLMProviderConfigRepository = LLMProviderConfigActorRepository(),
         ruleRepository: any LLMRuleConfigRepository = LLMRuleConfigActorRepository()
     ) {
-        let chatModesDirectory = StoragePath.configsDirectory
-            .appendingPathComponent("ChatModes")
-        try? FileManager.default.createDirectory(at: chatModesDirectory, withIntermediateDirectories: true)
-        storageFileURL = chatModesDirectory.appendingPathComponent("ChatModes.json")
+        let agentsDirectory = StoragePath.configsDirectory
+            .appendingPathComponent("Agents")
+        try? FileManager.default.createDirectory(at: agentsDirectory, withIntermediateDirectories: true)
+        storageFileURL = agentsDirectory.appendingPathComponent("Agents.json")
         self.providerRepository = providerRepository
         self.ruleRepository = ruleRepository
         setupObservers()
@@ -53,15 +53,15 @@ actor ChatModeConfigActorRepository: ChatModeConfigRepository {
         observers.append(contentsOf: [providerObserver, ruleObserver])
     }
 
-    func getAllChatModes() async -> [ChatModeConfig] {
-        if let cached = cachedModes, !cached.isEmpty {
+    func getAllAgents() async -> [AgentConfig] {
+        if let cached = cachedAgents, !cached.isEmpty {
             return cached
         }
         
         // 加载用户保存的配置
-        let savedModes: [ChatModeConfig]
+        let savedModes: [AgentConfig]
         if let data = try? Data(contentsOf: storageFileURL) {
-            savedModes = (try? JSONDecoder().decode([ChatModeConfig].self, from: data)) ?? []
+            savedModes = (try? JSONDecoder().decode([AgentConfig].self, from: data)) ?? []
         } else {
             savedModes = []
         }
@@ -69,27 +69,27 @@ actor ChatModeConfigActorRepository: ChatModeConfigRepository {
         // 如果用户配置为空，则加载默认模板
         if savedModes.isEmpty {
             let defaultModes = loadDefaultTemplates() ?? []
-            cachedModes = defaultModes
+            cachedAgents = defaultModes
             return defaultModes
         }
         
-        cachedModes = savedModes
+        cachedAgents = savedModes
         return savedModes
     }
     
-    private func loadDefaultTemplates() -> [ChatModeConfig]? {
+    private func loadDefaultTemplates() -> [AgentConfig]? {
         guard let data = try? Data(contentsOf: defaultTemplatesURL) else { return nil }
-        return (try? JSONDecoder().decode([ChatModeConfig].self, from: data)) ?? []
+        return (try? JSONDecoder().decode([AgentConfig].self, from: data)) ?? []
     }
 
     private func handleRuleChange() async {
-        var modes = await getAllChatModes()
+        var agents = await getAllAgents()
         var changed = false
 
-        for i in modes.indices {
-            let originalCount = modes[i].rules.count
-            modes[i].rules = await withTaskGroup(of: LLMRuleConfig?.self) { group in
-                for rule in modes[i].rules {
+        for i in agents.indices {
+            let originalCount = agents[i].rules.count
+            agents[i].rules = await withTaskGroup(of: LLMRuleConfig?.self) { group in
+                for rule in agents[i].rules {
                     group.addTask {
                         await self.ruleRepository.getRule(id: rule.id) != nil ? rule : nil
                     }
@@ -104,65 +104,65 @@ actor ChatModeConfigActorRepository: ChatModeConfigRepository {
                 return validRules
             }
 
-            if modes[i].rules.count != originalCount {
+            if agents[i].rules.count != originalCount {
                 changed = true
             }
         }
 
         if changed {
-            saveModes(modes)
+            saveAgents(agents)
         }
     }
 
     private func handleProviderChange() async {
-        var modes = await getAllChatModes()
+        var agents = await getAllAgents()
         var changed = false
 
-        for i in modes.indices {
-            if let providerId = modes[i].provider?.id {
+        for i in agents.indices {
+            if let providerId = agents[i].provider?.id {
                 if await providerRepository.getConfig(id: providerId) == nil {
-                    modes[i].provider = nil
-                    modes[i].model = nil
+                    agents[i].provider = nil
+                    agents[i].model = nil
                     changed = true
                 }
             }
         }
 
         if changed {
-            saveModes(modes)
+            saveAgents(agents)
         }
     }
 
-    func getChatMode(id: String) async -> ChatModeConfig? {
-        let modes = await getAllChatModes()
-        return modes.first { $0.id == id }
+    func getAgent(id: String) async -> AgentConfig? {
+        let agents = await getAllAgents()
+        return agents.first { $0.id == id }
     }
 
-    func createChatMode(config: ChatModeConfig) async -> ChatModeConfig {
-        var modes = await getAllChatModes()
-        modes.append(config)
-        saveModes(modes)
+    func createAgent(config: AgentConfig) async -> AgentConfig {
+        var agents = await getAllAgents()
+        agents.append(config)
+        saveAgents(agents)
         return config
     }
 
-    func updateChatMode(config: ChatModeConfig) async -> Bool {
-        var modes = await getAllChatModes()
-        guard let index = modes.firstIndex(where: { $0.id == config.id }) else { return false }
-        modes[index] = config
-        saveModes(modes)
+    func updateAgent(config: AgentConfig) async -> Bool {
+        var agents = await getAllAgents()
+        guard let index = agents.firstIndex(where: { $0.id == config.id }) else { return false }
+        agents[index] = config
+        saveAgents(agents)
         return true
     }
 
-    func deleteChatMode(id: String) async {
-        var modes = await getAllChatModes()
-        modes.removeAll { $0.id == id }
-        saveModes(modes)
+    func deleteAgent(id: String) async {
+        var agents = await getAllAgents()
+        agents.removeAll { $0.id == id }
+        saveAgents(agents)
     }
 
-    private func saveModes(_ modes: [ChatModeConfig]) {
-        let data = try? JSONEncoder().encode(modes)
+    private func saveAgents(_ agents: [AgentConfig]) {
+        let data = try? JSONEncoder().encode(agents)
         try? data?.write(to: storageFileURL)
-        cachedModes = modes
-        NotificationCenter.default.post(name: .chatModeConfigChanged, object: nil)
+        cachedAgents = agents
+        NotificationCenter.default.post(name: .agentConfigChanged, object: nil)
     }
 }

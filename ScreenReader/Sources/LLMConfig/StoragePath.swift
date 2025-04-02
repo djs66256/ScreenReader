@@ -56,13 +56,13 @@ enum StoragePath {
         }
     }
     
-    enum ChatModes {
+    enum Agents {
         static let templates = templatesBaseDirectory
-            .appendingPathComponent("ChatModeTemplates.json")
+            .appendingPathComponent("AgentTemplates.json")
         
         static func configFile(id: String) -> URL {
             configsDirectory
-                .appendingPathComponent("ChatModes")
+                .appendingPathComponent("Agents")
                 .appendingPathComponent("\(id).json")
         }
     }

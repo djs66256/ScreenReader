@@ -30,7 +30,7 @@ final class LLMConfigTests: XCTestCase {
         XCTAssertNotNil(configManager.providerConfigRepository)
          XCTAssertNotNil(configManager.modelConfigRepository)
         XCTAssertNotNil(configManager.ruleConfigRepository)
-        XCTAssertNotNil(configManager.chatModeConfigRepository)
+        XCTAssertNotNil(configManager.agentConfigRepository)
         XCTAssertNotNil(configManager.providerTemplateRepository)
         XCTAssertNotNil(configManager.modelTemplateRepository)
     }

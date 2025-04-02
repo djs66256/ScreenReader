@@ -2,12 +2,12 @@ import SwiftUI
 
 struct SettingsContainer: View {
     enum SettingsTab: String, CaseIterable {
-        case chatMode = "Chat模式"
+        case agent = "Agent模式"
         case apiProvider = "API提供商"
         case rules = "规则设置"
     }
     
-    @State private var selectedTab: SettingsTab = .chatMode
+    @State private var selectedTab: SettingsTab = .agent
     
     var body: some View {
         VStack(spacing: 0) {
@@ -33,8 +33,8 @@ struct SettingsContainer: View {
             // 内容区域
             Group {
                 switch selectedTab {
-                case .chatMode:
-                    ChatModeSettingsView()
+                case .agent:
+                    AgentSettingsView()
                 case .apiProvider:
                     APIProviderSettingsView()  // 重用原有的API设置视图
                 case .rules:
@@ -46,7 +46,7 @@ struct SettingsContainer: View {
         .frame(minWidth: 800, minHeight: 600)
         .environment(\.ruleConfigRepository, LLMConfigManager.shared.ruleConfigRepository)
         .environment(\.llmProviderConfigRepository, LLMConfigManager.shared.providerConfigRepository)
-        .environment(\.chatModeConfigRepository, LLMConfigManager.shared.chatModeConfigRepository)
+        .environment(\.agentConfigRepository, LLMConfigManager.shared.agentConfigRepository)
     }
 }
 

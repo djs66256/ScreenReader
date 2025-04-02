@@ -3,7 +3,7 @@ import Foundation
 class OpenAICompatibleProvider: LLMProvider {
     private let provider: OpenAIProvider
 
-    init(config: ChatModeConfig) {
+    init(config: AgentConfig) {
         self.provider = OpenAIProvider(config: config, isCompatibleMode: true)
     }
     

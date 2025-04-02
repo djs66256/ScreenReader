@@ -3,7 +3,7 @@ import Alamofire
 import os
 
 class AnthropicProvider: LLMProvider {
-    private let config: ChatModeConfig
+    private let config: AgentConfig
     
     private var apiKey: String? {
         config.provider?.apiKey
@@ -17,7 +17,7 @@ class AnthropicProvider: LLMProvider {
         config.provider?.defaultBaseURL
     }
 
-    init(config: ChatModeConfig) {
+    init(config: AgentConfig) {
         self.config = config
     }
     

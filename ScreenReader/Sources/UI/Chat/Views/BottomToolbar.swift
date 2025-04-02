@@ -53,16 +53,16 @@ struct BottomToolbar: View {
             
             // 模型选择
             Menu {
-                ForEach(viewModel.chatModes, id: \.id) { mode in
+                ForEach(viewModel.agents, id: \.id) { agent in
                     Button(action: {
-                        viewModel.selectedModel = mode
+                        viewModel.selectedModel = agent
                     }) {
-                        Text(mode.name)
+                        Text(agent.name)
                     }
                 }
             } label: {
                 ZStack {
-                    Text(viewModel.selectedModel?.name ?? "选择模型")
+                    Text(viewModel.selectedModel?.name ?? "选择代理")
                         .foregroundColor(Color(.labelColor))
                         .padding(6)
                         .frame(maxWidth: .infinity, alignment: .leading)

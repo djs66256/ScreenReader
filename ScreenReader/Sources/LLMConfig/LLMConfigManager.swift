@@ -7,7 +7,7 @@ final class LLMConfigManager {
     let providerConfigRepository: any LLMProviderConfigRepository
     let modelConfigRepository: any LLMModelConfigRepository
     let ruleConfigRepository: any LLMRuleConfigRepository
-    let chatModeConfigRepository: any ChatModeConfigRepository
+    let agentConfigRepository: any AgentConfigRepository
     
     
     private init() {
@@ -16,8 +16,8 @@ final class LLMConfigManager {
         modelConfigRepository = LLMModelConfigActorRepository()
         ruleConfigRepository = LLMRuleConfigActorRepository()
         
-        // 修改：传入依赖的repository初始化chatModeConfigRepository
-        chatModeConfigRepository = ChatModeConfigActorRepository(
+        // 修改：传入依赖的repository初始化agentConfigRepository
+        agentConfigRepository = AgentConfigActorRepository(
             providerRepository: providerConfigRepository,
             ruleRepository: ruleConfigRepository
         )

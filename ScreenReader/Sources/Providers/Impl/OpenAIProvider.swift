@@ -34,7 +34,7 @@ openai 传参示例：
 }
 */
 class OpenAIProvider: LLMProvider {
-    private let config: ChatModeConfig
+    private let config: AgentConfig
     private let isCompatibleMode: Bool  // 新增兼容模式标志
     
     private var apiKey: String? {
@@ -49,7 +49,7 @@ class OpenAIProvider: LLMProvider {
         config.provider?.defaultBaseURL
     }
     
-    init(config: ChatModeConfig, isCompatibleMode: Bool = false) {
+    init(config: AgentConfig, isCompatibleMode: Bool = false) {
         self.config = config
         self.isCompatibleMode = isCompatibleMode
     }

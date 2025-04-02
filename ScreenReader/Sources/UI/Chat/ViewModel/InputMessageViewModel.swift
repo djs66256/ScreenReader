@@ -6,21 +6,21 @@ class InputMessageViewModel: ObservableObject {
     @Published var textInput: String = ""
     @Published var displayedImages: [NSImage] = []
     @Published var isInputFocused: Bool = true
-    @Published var selectedModel: ChatModeConfig?
-    @Published var chatModes: [ChatModeConfig] = []
+    @Published var selectedModel: AgentConfig?
+    @Published var agents: [AgentConfig] = []
     
-    private let repository: ChatModeConfigRepository
+    private let repository: AgentConfigRepository
     private var cancellables = Set<AnyCancellable>()
     
-    init(repository: ChatModeConfigRepository = LLMConfigManager.shared.chatModeConfigRepository) {
+    init(repository: AgentConfigRepository = LLMConfigManager.shared.agentConfigRepository) {
         self.repository = repository
-        fetchChatModes()
+        fetchAgents()
         
         // 使用 publisher 监听配置变更
-        NotificationCenter.default.publisher(for: .chatModeConfigChanged)
+        NotificationCenter.default.publisher(for: .agentConfigChanged)
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
-                self?.fetchChatModes()
+                self?.fetchAgents()
             }
             .store(in: &cancellables)
     }
@@ -39,26 +39,26 @@ class InputMessageViewModel: ObservableObject {
         displayedImages.remove(at: index)
     }
     
-    func updateSelectedModel(_ model: ChatModeConfig?) {
+    func updateSelectedModel(_ model: AgentConfig?) {
         selectedModel = model
     }
     
-    private func fetchChatModes() {
+    private func fetchAgents() {
         Task {
-            let modes = await repository.getAllChatModes()
+            let agents = await repository.getAllAgents()
             DispatchQueue.main.async {
-                self.chatModes = modes
+                self.agents = agents
                 
                 // 如果当前选中的模型不在更新后的列表中，则选择第一个
                 if let selected = self.selectedModel {
-                    if !modes.contains(where: { $0.id == selected.id }) {
-                        self.selectedModel = modes.first
-                    } else if let updatedModel = modes.first(where: { $0.id == selected.id }) {
+                    if !agents.contains(where: { $0.id == selected.id }) {
+                        self.selectedModel = agents.first
+                    } else if let updatedModel = agents.first(where: { $0.id == selected.id }) {
                         // 更新当前选中的模型为最新版本
                         self.selectedModel = updatedModel
                     }
                 } else {
-                    self.selectedModel = modes.first
+                    self.selectedModel = agents.first
                 }
             }
         }
@@ -67,7 +67,7 @@ class InputMessageViewModel: ObservableObject {
 
 extension InputMessageViewModel {
     static func mock() -> InputMessageViewModel {
-        let repository = MockChatModeConfigRepository()
+        let repository = MockAgentConfigRepository()
         let viewModel = InputMessageViewModel(repository: repository)
         viewModel.textInput = "这是一个测试消息"
         viewModel.isInputFocused = true
@@ -86,12 +86,12 @@ extension InputMessageViewModel {
         viewModel.displayedImages = [redImage, blueImage]
         
         // 直接设置测试模型，因为 mock repository 不会返回数据
-        viewModel.chatModes = [
-            ChatModeConfig(id: "mode1", name: "模式1", rules: []),
-            ChatModeConfig(id: "mode2", name: "模式2", rules: []),
-            ChatModeConfig(id: "mode3", name: "模式3", rules: [])
+        viewModel.agents = [
+            AgentConfig(id: "mode1", name: "模式1", rules: []),
+            AgentConfig(id: "mode2", name: "模式2", rules: []),
+            AgentConfig(id: "mode3", name: "模式3", rules: [])
         ]
-        viewModel.selectedModel = viewModel.chatModes.first
+        viewModel.selectedModel = viewModel.agents.first
         
         return viewModel
     }

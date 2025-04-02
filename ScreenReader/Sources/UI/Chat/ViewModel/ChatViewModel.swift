@@ -6,7 +6,7 @@ import Foundation
     @Published var isLoading = false
 
     // 私有方法处理公共发送逻辑
-    private func sendCommonLogic(contents: [ChatContent], using config: ChatModeConfig) async throws {
+    private func sendCommonLogic(contents: [ChatContent], using config: AgentConfig) async throws {
         let provider = try LLMProviderFactory.createProvider(config: config)
         let messages = await MainActor.run {
             let userMessage = ChatMessage(contents: contents, isUser: true)
@@ -35,13 +35,13 @@ import Foundation
     }
 
     // 发送纯文本消息(便捷方法)
-    func sendText(_ text: String, using config: ChatModeConfig) async throws {
+    func sendText(_ text: String, using config: AgentConfig) async throws {
         guard !text.isEmpty else { return }
         try await sendCommonLogic(contents: [.text(text)], using: config)
     }
 
     // 发送文本消息
-    func sendMessage(text: String, images: [NSImage], using config: ChatModeConfig) async throws {
+    func sendMessage(text: String, images: [NSImage], using config: AgentConfig) async throws {
         var contents: [ChatContent] = []
         
         for image in images {
@@ -58,7 +58,7 @@ import Foundation
     }
     
     // 发送图片消息(URL)
-    func sendImages(_ urls: [URL], using config: ChatModeConfig) async throws {
+    func sendImages(_ urls: [URL], using config: AgentConfig) async throws {
         guard !urls.isEmpty else { return }
         let contents = urls.map { ChatContent.imageURL($0) }
         try await sendCommonLogic(contents: contents, using: config)

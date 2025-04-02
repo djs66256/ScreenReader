@@ -14,7 +14,7 @@ enum LLMProviderType: String, Codable {
 }
 
 enum LLMProviderFactory {
-    static func createProvider(config: ChatModeConfig) throws -> LLMProvider {
+    static func createProvider(config: AgentConfig) throws -> LLMProvider {
         guard let provider = config.provider else {
             return defaultProvider
         }
@@ -40,7 +40,7 @@ enum LLMProviderFactory {
     }
 
     static var defaultProvider: LLMProvider {
-        let defaultConfig = ChatModeConfig(
+        let defaultConfig = AgentConfig(
             id: "default",
             name: "Default",
             provider: LLMProviderConfig(
