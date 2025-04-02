@@ -27,7 +27,7 @@ class ScreenshotManager: NSObject {
 
     override init() {
         // 默认使用AVFoundation实现的屏幕捕获
-        screenCapture = AVScreenCapture()
+        screenCapture = SCStreamScreenCapture()
         super.init()
     }
 
@@ -71,7 +71,7 @@ class ScreenshotManager: NSObject {
             var hasClicked = false
 
             // 监听鼠标移动、左键点击和键盘事件
-            self.eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDown, .keyDown]) { [weak self] event in
+            self.eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDown]) { [weak self] event in
                 guard let self = self else { return event }
                 
                 switch event.type {
@@ -103,25 +103,6 @@ class ScreenshotManager: NSObject {
                     if let monitor = self.eventMonitor {
                         NSEvent.removeMonitor(monitor)
                         self.eventMonitor = nil
-                    }
-                    
-                case .keyDown:
-                    // 处理键盘事件
-                    if self.verboseLogging {
-                        os_log("键盘事件: keyCode=%d", log: .default, type: .debug, event.keyCode)
-                    }
-                    switch event.keyCode {
-                    case 53: // ESC键
-                        if self.verboseLogging {
-                            os_log("用户按下ESC键，取消截图", log: .default, type: .info)
-                        }
-                        // 取消截图流程
-                        DispatchQueue.main.async {
-                            self.cleanup()
-                            completion(nil)
-                        }
-                    default:
-                        break
                     }
                     
                 default:
