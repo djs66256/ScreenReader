@@ -40,9 +40,10 @@ struct InputArea: View {
             
             HStack(alignment: .bottom, spacing: 8) {
                 TextEditor(text: $viewModel.textInput)
-                    .frame(minHeight: 40, maxHeight: 120)
+                    .frame(minHeight: 40, maxHeight: 16 * 4 + 2 * 5)
                     .padding(8)
                     .font(.system(size: 16))
+                    .lineSpacing(2)
                     .scrollIndicators(.never)
                     .background(
                         RoundedRectangle(cornerRadius: 8)

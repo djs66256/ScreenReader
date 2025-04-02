@@ -85,14 +85,9 @@ struct BottomToolbar: View {
             // 发送按钮
             Button(action: sendMessage) {
                 Image(systemName: "paperplane.fill")
-                    .font(.system(size: 12))
+                    .font(.system(size: 14))
+                    .foregroundColor(Color(.labelColor))
                     .padding(6)
-                    .background(
-                        Circle()
-                            .fill(Color.accentColor)
-                            .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
-                    )
-                    .foregroundColor(.white)
             }
             .buttonStyle(.plain)
             .keyboardShortcut(.return, modifiers: [])
