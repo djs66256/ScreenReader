@@ -31,7 +31,16 @@ struct BottomToolbar: View {
             
             // 截图按钮
             Button(action: {
-                // TODO: 实现截图功能
+                // 通过 NSApp.keyWindow 获取当前活动窗口
+                guard let window = NSApp.keyWindow else { return }
+                window.orderOut(nil) // 隐藏当前窗口
+                
+                Task { @MainActor in
+                    if let screenshot = await ScreenshotManager.shared.captureInteractive() {
+                        viewModel.addImage(screenshot)
+                    }
+                    window.makeKeyAndOrderFront(nil) // 截图完成后重新显示窗口
+                }
             }) {
                 Image(systemName: "camera.viewfinder")
                     .font(.system(size: 14))
