@@ -35,6 +35,7 @@ openai 传参示例：
 */
 class OpenAIProvider: LLMProvider {
     private let config: ChatModeConfig
+    private let isCompatibleMode: Bool  // 新增兼容模式标志
     
     private var apiKey: String? {
         config.provider?.apiKey
@@ -47,9 +48,10 @@ class OpenAIProvider: LLMProvider {
     var baseURLString: String? {
         config.provider?.defaultBaseURL
     }
-
-    init(config: ChatModeConfig) {
+    
+    init(config: ChatModeConfig, isCompatibleMode: Bool = false) {
         self.config = config
+        self.isCompatibleMode = isCompatibleMode
     }
     
     func send(messages: [Message]) async throws -> AsyncThrowingStream<Message, Error> {
@@ -64,7 +66,20 @@ class OpenAIProvider: LLMProvider {
         }
         
         // 补全Chat接口路径
-        let url = baseURL.appendingPathComponent("chat/completions")
+        let url: URL
+        if isCompatibleMode {
+            // 兼容模式下直接使用baseURL作为完整URL
+            guard let baseURL = URL(string: baseURLString ?? "") else {
+                throw NSError(domain: "OpenAIProvider", code: 400, userInfo: [NSLocalizedDescriptionKey: "API URL is not configured"])
+            }
+            url = baseURL
+        } else {
+            // 非兼容模式下追加chat/completions路径
+            guard let baseURL = URL(string: baseURLString ?? "") else {
+                throw NSError(domain: "OpenAIProvider", code: 400, userInfo: [NSLocalizedDescriptionKey: "API URL is not configured"])
+            }
+            url = baseURL.appendingPathComponent("chat/completions")
+        }
         
         let headers = [
             "Authorization": "Bearer \(apiKey)",

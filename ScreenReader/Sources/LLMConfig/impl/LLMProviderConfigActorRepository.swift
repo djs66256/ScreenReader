@@ -41,6 +41,10 @@ actor LLMProviderConfigActorRepository: LLMProviderConfigRepository {
         guard let data = try? Data(contentsOf: defaultTemplatesURL) else { return nil }
         return (try? JSONDecoder().decode([LLMProviderConfig].self, from: data)) ?? []
     }
+        
+    func getAllTemplates() async -> [LLMProviderConfig] {
+        return loadDefaultConfigs() ?? []
+    }
     
     func getConfig(id: String) async -> LLMProviderConfig? {
         let configs = await getAllConfigs()

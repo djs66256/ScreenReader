@@ -19,9 +19,21 @@ enum LLMProviderFactory {
             return AnthropicProvider(config: config)
         case let id where id.contains("ollama"):
             return OllamaProvider(config: config)
+        case let id where id.contains("openai-compatible"):  // 新增兼容类型判断
+            return OpenAICompatibleProvider(config: config)
         default:
             throw NSError(domain: "LLMProviderFactory", code: 400, userInfo: [NSLocalizedDescriptionKey: "Unsupported provider type"])
         }
+    }
+    
+    /// 获取所有支持的提供者类型ID
+    static var allSupportedProviderIDs: [String] {
+        return [
+            "openai",
+            "anthropic", 
+            "ollama",
+            "openai-compatible"
+        ]
     }
 
     static var defaultProvider: LLMProvider {

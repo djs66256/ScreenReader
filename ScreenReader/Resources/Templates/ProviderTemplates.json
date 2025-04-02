@@ -19,5 +19,12 @@
         "defaultBaseURL": "http://localhost:11434",
         "apiKey": null,
         "supportedModelIDs": ["llama2", "mistral", "gemma"]
+    },
+    {
+        "id": "openai-compatible",
+        "name": "OpenAI-Compatible",
+        "defaultBaseURL": "https://your-api-endpoint.com/v1",
+        "apiKey": null,
+        "supportedModelIDs": ["custom-model-1", "custom-model-2"]
     }
 ]

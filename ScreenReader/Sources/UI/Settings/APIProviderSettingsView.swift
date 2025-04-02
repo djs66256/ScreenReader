@@ -185,6 +185,10 @@ struct APIProviderSettingsView_Previews: PreviewProvider {
 }
 
 class MockLLMProviderConfigRepository: LLMProviderConfigRepository {
+    func getAllTemplates() async -> [LLMProviderConfig] {
+        []
+    }
+
     private var providers: [LLMProviderConfig]
     
     init() {

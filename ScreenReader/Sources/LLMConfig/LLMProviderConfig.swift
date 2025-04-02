@@ -17,6 +17,7 @@ struct LLMProviderConfig: Codable, Equatable, Identifiable, Hashable {
 }
 
 protocol LLMProviderConfigRepository {
+    func getAllTemplates() async -> [LLMProviderConfig]
     func getAllConfigs() async -> [LLMProviderConfig]
     func getConfig(id: String) async -> LLMProviderConfig?
     func createConfig(config: LLMProviderConfig) async -> LLMProviderConfig
