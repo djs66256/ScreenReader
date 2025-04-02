@@ -20,7 +20,7 @@ struct SettingsContainer: View {
                         Text(tab.rawValue)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 10)
-                            .background(selectedTab == tab ? Color.accentColor.opacity(0.2) : Color.clear)
+                            .background(selectedTab == tab ? Color.accentColor.opacity(0.2) : Color.white.opacity(0.001)) // 使用极低透明度的白色替代clear
                             .cornerRadius(6)
                     }
                     .buttonStyle(.plain)
