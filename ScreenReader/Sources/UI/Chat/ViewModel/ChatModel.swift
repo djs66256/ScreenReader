@@ -59,12 +59,14 @@ struct ChatMessage: Identifiable, Equatable {
     let isUser: Bool
     let timestamp: Date
     var isProcessing: Bool = false
-    
-    init(contents: [ChatContent], isUser: Bool, timestamp: Date = Date(), isProcessing: Bool = false) {
+    var isFailed: Bool = false
+
+    init(contents: [ChatContent], isUser: Bool, timestamp: Date = Date(), isProcessing: Bool = false, isFailed: Bool = false) {
         self.contents = contents
         self.isUser = isUser
         self.timestamp = timestamp
         self.isProcessing = isProcessing
+        self.isFailed = isFailed
     }
     
     // 添加内容的方法
@@ -91,7 +93,7 @@ struct ChatMessage: Identifiable, Equatable {
 
 extension ChatMessage {
     // 从Message转换为ChatMessage
-    init(from message: Message) {
+    init(from message: Message, isProcessing: Bool = false) {
         let contents: [ChatContent]
         
         switch message.content {
@@ -119,7 +121,7 @@ extension ChatMessage {
             contents: contents,
             isUser: message.role == .user,
             timestamp: message.timestamp,
-            isProcessing: false
+            isProcessing: isProcessing
         )
     }
     

@@ -7,6 +7,9 @@ import Foundation
 
     // 私有方法处理公共发送逻辑
     private func sendCommonLogic(contents: [ChatContent], using config: AgentConfig) async throws {
+        if isLoading {
+            throw NSError(domain: "ChatViewModel", code: 429, userInfo: [NSLocalizedDescriptionKey: "正在处理中，请稍后再试。"])
+        }
         let provider = try LLMProviderFactory.createProvider(config: config)
         let messages = await MainActor.run {
             let userMessage = ChatMessage(contents: contents, isUser: true)
@@ -15,21 +18,34 @@ import Foundation
             let aiMessage = ChatMessage(contents: [.text("")], isUser: false, isProcessing: true)
             self.messages.append(aiMessage)
             
-            return self.messages.map { $0.toMessage() }
+            return self.messages.filter { !$0.isProcessing && !$0.isFailed }.map { $0.toMessage() }
         }
 
         let lastIndex = self.messages.indices.last!
         
         do {
+            isLoading = true
             for try await message in try await provider.send(messages: messages) {
                 await MainActor.run {
-                    self.messages[lastIndex] = ChatMessage(from: message)
+                    self.messages[lastIndex] = ChatMessage(from: message, isProcessing: true)
                 }
             }
+            await MainActor.run {
+                var message = self.messages[lastIndex]
+                message.isProcessing = false
+                self.messages[lastIndex] = message
+            }
+            isLoading = false
         } catch {
             await MainActor.run {
-                self.messages[lastIndex] = ChatMessage(contents: [.text("处理消息时出错: \(error.localizedDescription)")], isUser: false, isProcessing: false)
+                self.messages[lastIndex] = ChatMessage(
+                    contents: [.text("处理消息时出错: \(error.localizedDescription)")],
+                    isUser: false,
+                    isProcessing: false,
+                    isFailed: true
+                )
             }
+            isLoading = false
             throw error
         }
     }
