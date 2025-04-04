@@ -171,22 +171,9 @@ struct AgentDetailView: View {
                     .font(.title3)
                     .foregroundColor(.secondary)
                 TextEditor(text: Binding(
-                    get: { agentConfig.model?.systemPrompt ?? "" },
+                    get: { agentConfig.systemPrompt ?? "" },
                     set: {
-                        if agentConfig.model == nil {
-                            agentConfig.model = LLMModelConfig(
-                                modelName: "",
-                                systemPrompt: $0,
-                                maxTokens: 2048,
-                                temperature: 0.7,
-                                topP: 1.0,
-                                presencePenalty: 0.0,
-                                frequencyPenalty: 0.0,
-                                stopWords: []
-                            )
-                        } else {
-                            agentConfig.model?.systemPrompt = $0
-                        }
+                        agentConfig.systemPrompt = $0
                     }
                 ))
                 .frame(minHeight: 80)

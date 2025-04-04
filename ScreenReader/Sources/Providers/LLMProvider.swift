@@ -53,7 +53,6 @@ enum LLMProviderFactory {
             ),
             model: LLMModelConfig(
                 modelName: "qwq:32b",
-                systemPrompt: nil,
                 maxTokens: 6400,
                 temperature: 0.7,
                 topP: 1.0,

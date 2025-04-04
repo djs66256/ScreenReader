@@ -2,7 +2,6 @@ import Foundation
 
 struct LLMModelConfig: Codable, Equatable, Hashable {
     var modelName: String
-    var systemPrompt: String?
     var maxTokens: Int
     var temperature: Double
     var topP: Double

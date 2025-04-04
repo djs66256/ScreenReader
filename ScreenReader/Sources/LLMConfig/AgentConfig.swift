@@ -5,6 +5,7 @@ struct AgentConfig: Codable, Identifiable, Hashable, Equatable {
     var name: String
     var provider: LLMProviderConfig?
     var model: LLMModelConfig?
+    var systemPrompt: String?
     var rules: [LLMRuleConfig]
 }
 

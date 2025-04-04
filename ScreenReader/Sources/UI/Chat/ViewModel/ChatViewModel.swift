@@ -25,7 +25,15 @@ import Foundation
         
         do {
             isLoading = true
-            for try await message in try await provider.send(messages: messages) {
+            let systemPrompt = if let systemPrompt = config.systemPrompt, !systemPrompt.isEmpty {
+                TemplateParser.parse(template: systemPrompt, context: [
+                    "rules": "你需要遵循以下规则：\n" + config.rules.compactMap { $0.systemPrompt }.filter { !$0.isEmpty }.map { "- \($0)" }.joined(separator: "\n"),
+                ])
+            } else {
+                "You are a helpful assistant."
+            }
+            let systemMessage = Message(role: .system, text: systemPrompt)
+            for try await message in try await provider.send(messages: [systemMessage] + messages) {
                 await MainActor.run {
                     self.messages[lastIndex] = ChatMessage(from: message, isProcessing: true)
                 }

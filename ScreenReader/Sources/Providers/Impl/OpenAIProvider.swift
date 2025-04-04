@@ -61,9 +61,6 @@ class OpenAIProvider: LLMProvider {
         guard let modelName = modelName else {
             throw NSError(domain: "OpenAIProvider", code: 400, userInfo: [NSLocalizedDescriptionKey: "Model name is not configured"])
         }
-        guard let baseURL = URL(string: baseURLString ?? "") else {
-            throw NSError(domain: "OpenAIProvider", code: 400, userInfo: [NSLocalizedDescriptionKey: "API URL is not configured"])
-        }
         
         // 补全Chat接口路径
         let url: URL
@@ -98,6 +95,21 @@ class OpenAIProvider: LLMProvider {
                 request.allHTTPHeaderFields = headers
                 
                 let openAIMessages = messages.map { $0.toOpenAIFormat() }
+                
+                #if DEBUG
+                var logOutput = ""
+                for message in openAIMessages {
+                    let role = message["role"] as? String ?? "unknown"
+                    if let content = message["content"] as? String {
+                        logOutput += "\(role): \(content)\n"
+                    } else if let contents = message["content"] as? [[String: String]] {
+                        let imageCount = contents.filter { $0["type"] == "image_url" }.count
+                        let textContents = contents.compactMap { $0["text"] }.joined(separator: " ")
+                        logOutput += "\(role): [\(String(repeating: "image, ", count: imageCount).dropLast(2))] \(textContents)\n"
+                    }
+                }
+                os_log(.debug, "[LLM Message]:\n%{public}@", logOutput)
+                #endif
                 
                 let parameters: [String: Any] = [
                     "model": modelName,
